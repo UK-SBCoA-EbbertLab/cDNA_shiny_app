@@ -81,7 +81,7 @@ new_transcripts <- transcript_data %>%
 
 # expression data, formatted for plot
 expression_data <- read_tsv("../../../../../mlpa241/Downloads/cDNA_files_r_shiny/expression_matrix_r_shiny.tsv") %>%
-  left_join(transcript_data %>% select(transcript_id, annotation_status, discovery_category) %>% distinct(), by = "transcript_id") %>%
+  left_join(transcript_data %>% select(transcript_id, annotation_status, discovery_category, transcript_biotype) %>% distinct(), by = "transcript_id") %>%
   pivot_longer(cols=3:10, names_to = "sample_expression_type", values_to = "number") %>%
   extract(sample_expression_type, into = c("sample_name", "expression_type"), "(.*)_([^_]+$)") %>%
   pivot_wider(names_from = expression_type, values_from = number)
@@ -159,7 +159,7 @@ body <- dashboardBody(
               # option for how to color the figure
               width = NULL,
               solidHeader = TRUE,
-              radioButtons("colorRadio", label = "Color by", choices = c("Discovery" = "annotation_status", "Type of new transcript" = "discovery_category"))
+              radioButtons("colorRadio", label = "Color by", choices = c("Discovery" = "annotation_status", "Type of new transcript" = "discovery_category", "Transcript Biotype" = "transcript_biotype"))
             ),
           ),
           column(
@@ -629,6 +629,8 @@ server <- function(input, output, session) {
     # 
     if(input$colorRadio =="annotation_status") {
       fill_legend_name <- "Annotation Status"
+    } else if (input$colorRadio == "transcript_biotype") {
+      fill_legend_name <- "Transcript Biotype"
     } else {
       fill_legend_name <- "Discovery Category"
     }
