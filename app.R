@@ -89,6 +89,36 @@ expression_data <- read_tsv("../../../../../mlpa241/Downloads/cDNA_files_r_shiny
 # Density plot data
 density_data <- read_tsv("../../../../../mlpa241/Downloads/cDNA_files_r_shiny/expression_matrix_r_shiny_GENE.tsv")
 
+
+anti_sense_data <- read_tsv("../../../../../mlpa241/Downloads/cDNA_files_r_shiny/AllNovelTranscripts_overlap_All_HG38_v107_Transcripts.tsv") %>% 
+  filter(StrandType == "OppositeStrand", startsWith(NewGeneID, "gene"), startsWith(Hg38v107_GeneID, "E")) %>% 
+  select(!Hg38v107_transcriptID) %>% 
+  distinct()
+
+# contains just gene_id and gene_names
+just_genes <- transcript_data %>% select(gene_id, gene_name) %>% distinct()
+
+# table of new genes that could potentially be anti-sense
+is_antisense <- left_join(anti_sense_data %>% 
+                      select(NewGeneID), 
+                      just_genes, 
+                      by = c("NewGeneID" = "gene_id")) %>%
+       rename(gene_id = NewGeneID) %>%
+       add_column(is_antisense = "true") %>%
+       add_column(has_antisense = "false")
+
+# table of know genes that we potentially found an anti-sense transcript for
+has_antisense <- left_join(anti_sense_data %>%
+                      select(Hg38v107_GeneID),
+                      just_genes, 
+                      by = c("Hg38v107_GeneID" = "gene_id")) %>%
+       rename(gene_id = Hg38v107_GeneID) %>%
+       add_column(has_antisense = "true") %>%
+       add_column(is_antisense = "false")
+
+# combine into single table for lookup
+just_genes_antisense <- bind_rows(is_antisense, has_antisense)
+
 # gene search space
 lookup <- as.data.frame(
              transcript_data %>%
@@ -362,45 +392,74 @@ server <- function(input, output, session) {
   # print(citation("ggtranscript"))
   # print(citation("ggpubr"))
   
+  # if 0 (default), the no antisense transcript is involved with current gene,
+  # if 1, then the gene has a potential antisense transcript,
+  # if 2, the new gene IS a potential antisense transcript to know gene
+  # if 3, reset to no anti-sense stuff
+  switch_for_antisense <<- 0
+  display_antisense <- reactiveVal(0)
+  
   observeEvent(input$linkButton, {
-    updateTabItems(session, "tabs", "ngb")
+    if(switch_for_antisense == 1){
+      # known gene with potential antisense transcript
+      # change button text and switch variable in comb_plot
+      # updateLinkButton('Reset')
+      # switch_for_antisense <<- 3
+      display_antisense(1)
+    } else if (switch_for_antisense == 2) {
+      # new gene as potential antisense transcript for known gene
+      # change button text and switch variable in comb_plot
+      # updateLinkButton('Reset')
+      # switch_for_antisense <<- 3
+      display_antisense(1)
+    } else if (switch_for_antisense == 3) {
+      # ready to allow the user to reset 
+      switch_for_antisense <<- change_back()
+      display_antisense(0)
+    } else {
+      updateTabItems(session, "tabs", "ngb")
+    }
+  })
+  
+  updateLinkButton <- function(btn_text){
+    updateActionButton(
+        session,
+        "linkButton",
+        label = btn_text
+      )
+  }
+  
+  change_back <- function(){
+    id = input$geneSearch
+    current_anti_sense <- just_genes_antisense %>%
+      filter(gene_id == id)
+    
+    # if we have some anti-sense to explore
+    if (nrow(current_anti_sense) > 0) {
+      # if it is a known gene
+      if (startsWith(id, "E")) {
+        updateLinkButton('PS. Checkout the potential anti-sense transcript(s) we found for this gene')
+        return(1)
+        # if it is a new gene body
+      } else {
+        updateLinkButton('PS. This gene body has potentially anti-sense transcript(s) for a known gene')
+        return(2)
+      }
+    } else {
+      # otherwise, point them to our New Gene Bodies Tab
+      updateLinkButton('Checkout new gene bodies we discovered')
+      return(0)
+    }
+  }
+  
+  #Update linkButton text on gene change
+  observeEvent(input$geneSearch, {
+    switch_for_antisense <<- change_back()
+    display_antisense(0)
   })
   
   selected_new_genes <- reactiveValues(data = new_genes)
   selected_new_transcripts <- reactiveValues(data = new_transcripts)
-  
-  # observe({
-  #   print(input$linkButton)
-  #   # TODO: check if this gene has 
-  #   # - anti-sense transcripts
-  #   
-  #   # if has anti-sense transcrits, display them
-  #   # TODO: maybe create a way to display the antisense transcripts with the normal gene transcripts
-  #   # if it doesn't take to another page with the genes 
-  # })
-  # 
-  # Need to flesh out for new gene bodies graph/ anti-sense adding
-  observe({
-    req(input$geneSearch)
-    
-    # TODO: check if this gene has 
-    # - anti-sense transcripts
-    
-    if(TRUE){
-      updateActionButton(
-        session,
-        "linkButton",
-        label = 'PS. Checkout the anti-sense transcript(s) we found for this gene'
-      )
-    } else {
-      updateActionButton(
-        session,
-        "linkButton",
-        label = 'Checkout new gene bodies we discovered'
-      )
-    }
-
-  })
 
   # Used for the gene search bar
   updateTextInput.typeahead(session, "geneSearch", lookup, "gene_id", c(lookup$gene_name, lookup$gene_id), template, 
@@ -475,12 +534,12 @@ server <- function(input, output, session) {
     }
   })
   
-  # Reset the new gene bodies graph on click
+  # Reset the new transcripts graph on click
   observeEvent(input$resetButton_tx, {
     selected_new_transcripts$data <- new_transcripts
   })
   
-  # render the new gene bodies plot
+  # render the new transcripts plot
   output$new_transcripts_plot <- renderPlot({
     plot_new_transcripts <- selected_new_transcripts$data
     #plot transcripts
@@ -490,10 +549,10 @@ server <- function(input, output, session) {
       y = seqnames
     )) +
       geom_range(
-        aes(fill = !! sym(input$colorRadio)),
+        aes(fill = discovery_category),
       ) +
       scale_x_continuous(labels = comma) + 
-      theme(legend.position="none")
+      theme(legend.position="bottom")
     #   theme (
     #     axis.title.y = element_blank()
     #   )
@@ -528,7 +587,6 @@ server <- function(input, output, session) {
   # create the transcript/expression plot
   # this will be used to render the plot on the page and also to download
   comb_plot <- reactive({
-    
     # get the gene of interest
     id <- input$geneSearch
     if (id == "") {
@@ -546,6 +604,32 @@ server <- function(input, output, session) {
     
     #grab the gene_name to print out later
     selected_gene_name <- unique(gene_transcripts$gene_name)
+    antisense_strand <- ""
+    antisense_transcripts <- c()
+    
+    if (display_antisense() == 1 & !switch_for_antisense %in% c(0,3)) {
+      column_keep <- switch(switch_for_antisense, "NewGeneID", "Hg38v107_GeneID")
+      column_name <- switch(switch_for_antisense, "Hg38v107_GeneID", "NewGeneID")
+      current_antisense_ids <- anti_sense_data %>%
+        filter(!!sym(column_name) == id) %>%
+        select(!!sym(column_keep))
+      gene_antisense_transcripts <- left_join(current_antisense_ids %>%
+                                                rename(gene_id = !!sym(column_keep)), 
+                                              transcript_data)
+      
+      antisense_strand <- unique(gene_antisense_transcripts$strand)
+      antisense_transcripts <- unique(gene_antisense_transcripts$transcript_id)
+      
+      gene_antisense_transcripts <- gene_antisense_transcripts %>%
+        mutate(strand = unique(gene_transcripts$strand))
+      
+      gene_antisense_expression <- left_join(current_antisense_ids %>%
+                                               rename(gene_id = !!sym(column_keep)), 
+                                             expression_data) 
+
+      gene_transcripts <- bind_rows(gene_transcripts, gene_antisense_transcripts)
+      gene_expression <- bind_rows(gene_expression, gene_antisense_expression)
+    }
     
     factor_order <- gene_expression %>% 
       select(transcript_id, gene_id, annotation_status, discovery_category, sample_name, input$expressionRadio) %>%
@@ -610,6 +694,15 @@ server <- function(input, output, session) {
       to_intron(gene_exons, "transcript_id"), 
       group_var = "transcript_id"
     )
+    
+    if(display_antisense() == 1 & !switch_for_antisense %in% c(0,3)){
+      gene_rescaled <- gene_rescaled %>%
+        mutate(strand = replace(strand, transcript_id %in% antisense_transcripts, antisense_strand))
+      
+      #reset linkButton
+      updateLinkButton('Reset')
+      switch_for_antisense <<- 3
+    }
     
     gene_rescaled_exons <- gene_rescaled %>% filter(type == "exon")
     gene_rescaled_introns <- gene_rescaled %>% filter(type == 'intron')
