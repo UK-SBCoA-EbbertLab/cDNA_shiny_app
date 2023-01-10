@@ -393,14 +393,7 @@ server <- function(input, output, session) {
   # print(citation("tidyverse"))
   # print(citation("ggtranscript"))
   # print(citation("ggpubr"))
-  
-  # if 0 (default), the no antisense transcript is involved with current gene,
-  # if 1, then the gene has a potential antisense transcript,
-  # if 2, the new gene IS a potential antisense transcript to know gene
-  # if 3, reset to no anti-sense stuff
-  # switch_for_antisense <<- 0
-  # display_antisense <- reactiveVal(0)
-  # anti_sense_gene_id <- reactiveVal("")
+
   current_ids <- reactiveValues(gene_id = "ENSG00000166295", # ANAPC16
                                  anti_sense_id = "", 
                                  showing_antisense = FALSE)
