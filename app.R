@@ -100,21 +100,23 @@ just_genes <- transcript_data %>% select(gene_id, gene_name) %>% distinct()
 
 # table of new genes that could potentially be anti-sense
 is_antisense <- left_join(anti_sense_data %>% 
-                      select(NewGeneID), 
+                      select(NewGeneID, Hg38v107_GeneID), 
                       just_genes, 
                       by = c("NewGeneID" = "gene_id")) %>%
        rename(gene_id = NewGeneID) %>%
-       add_column(is_antisense = "true") %>%
-       add_column(has_antisense = "false")
+       rename(antisense_id = Hg38v107_GeneID) #%>%
+       # add_column(is_antisense = "true") %>%
+       # add_column(has_antisense = "false")
 
 # table of know genes that we potentially found an anti-sense transcript for
 has_antisense <- left_join(anti_sense_data %>%
-                      select(Hg38v107_GeneID),
+                      select(Hg38v107_GeneID, NewGeneID),
                       just_genes, 
                       by = c("Hg38v107_GeneID" = "gene_id")) %>%
        rename(gene_id = Hg38v107_GeneID) %>%
-       add_column(has_antisense = "true") %>%
-       add_column(is_antisense = "false")
+       rename(antisense_id = NewGeneID) #%>%
+       # add_column(has_antisense = "true") %>%
+       # add_column(is_antisense = "false")
 
 # combine into single table for lookup
 just_genes_antisense <- bind_rows(is_antisense, has_antisense)
@@ -391,36 +393,81 @@ server <- function(input, output, session) {
   # print(citation("tidyverse"))
   # print(citation("ggtranscript"))
   # print(citation("ggpubr"))
+
+  current_ids <- reactiveValues(gene_id = "ENSG00000166295", # ANAPC16
+                                 anti_sense_id = "", 
+                                 showing_antisense = FALSE)
   
-  # if 0 (default), the no antisense transcript is involved with current gene,
-  # if 1, then the gene has a potential antisense transcript,
-  # if 2, the new gene IS a potential antisense transcript to know gene
-  # if 3, reset to no anti-sense stuff
-  switch_for_antisense <<- 0
-  display_antisense <- reactiveVal(0)
+  #id <- "ENSG00000130203" # APOE
+  #id <- "ENSG00000166295" # ANAPC16
+  #id <- "ENSG00000168209" # DDIT4
+  #id <- "ENSG00000219545" # UMAD1
   
+  # the base data to be displayed
+  plot_data <- reactive({
+    id <- current_ids$gene_id
+    antisense_id <- current_ids$anti_sense_id
+
+    # will need to arrange in order
+    gene_transcripts <- transcript_data %>% 
+      filter(gene_id == id)
+    gene_expression <- expression_data %>% 
+      filter(gene_id == id)
+    
+    # #grab the gene_name to print out later
+    selected_gene_name <- unique(gene_transcripts$gene_name)
+    
+    #grab the gene_name to print out later
+    antisense_strand <- ""
+    antisense_transcripts <- c()
+
+    if (current_ids$showing_antisense == TRUE){
+      gene_antisense_transcripts <- transcript_data %>%
+        filter(gene_id == antisense_id)
+      gene_antisense_expression <- expression_data %>%
+        filter(gene_id == antisense_id)
+      antisense_strand <- unique(gene_antisense_transcripts$strand)
+      antisense_transcripts <- unique(gene_antisense_transcripts$transcript_id)
+      
+      gene_antisense_transcripts <- gene_antisense_transcripts %>%
+            mutate(strand = unique(gene_transcripts$strand))
+      
+      gene_transcripts <- bind_rows(gene_transcripts, gene_antisense_transcripts)
+      gene_expression <- bind_rows(gene_expression, gene_antisense_expression)
+    }
+    
+    return(
+      list(
+        txs = gene_transcripts,
+        expr = gene_expression,
+        antisense_strand = antisense_strand,
+        antisense_txs = antisense_transcripts,
+        gene_name = selected_gene_name
+      )
+    )
+  })
+  
+  
+  # Change the data in the plot data to reflect if the user wants to see antisense or not
   observeEvent(input$linkButton, {
-    if(switch_for_antisense == 1){
-      # known gene with potential antisense transcript
-      # change button text and switch variable in comb_plot
-      # updateLinkButton('Reset')
-      # switch_for_antisense <<- 3
-      display_antisense(1)
-    } else if (switch_for_antisense == 2) {
-      # new gene as potential antisense transcript for known gene
-      # change button text and switch variable in comb_plot
-      # updateLinkButton('Reset')
-      # switch_for_antisense <<- 3
-      display_antisense(1)
-    } else if (switch_for_antisense == 3) {
-      # ready to allow the user to reset 
-      switch_for_antisense <<- change_back()
-      display_antisense(0)
+    print(current_ids$gene_id)
+    if(current_ids$showing_antisense == FALSE & current_ids$anti_sense_id != "") {
+      current_ids$showing_antisense = TRUE
+      updateLinkButton('Reset')
+    } else if (current_ids$anti_sense_id != ""){
+      current_ids$showing_antisense = FALSE
+      if (startsWith(current_ids$gene_id, "E")) {
+        updateLinkButton('PS. Checkout the potential anti-sense transcript(s) we found for this gene')
+      } else {
+        updateLinkButton('PS. This gene body has potential anti-sense transcript(s) for a known gene')
+      }
     } else {
       updateTabItems(session, "tabs", "ngb")
     }
   })
   
+  
+  #function to update the linkButton text
   updateLinkButton <- function(btn_text){
     updateActionButton(
         session,
@@ -429,41 +476,37 @@ server <- function(input, output, session) {
       )
   }
   
-  change_back <- function(){
-    id = input$geneSearch
-    current_anti_sense <- just_genes_antisense %>%
-      filter(gene_id == id)
-    
-    # if we have some anti-sense to explore
-    if (nrow(current_anti_sense) > 0) {
-      # if it is a known gene
-      if (startsWith(id, "E")) {
-        updateLinkButton('PS. Checkout the potential anti-sense transcript(s) we found for this gene')
-        return(1)
-        # if it is a new gene body
-      } else {
-        updateLinkButton('PS. This gene body has potentially anti-sense transcript(s) for a known gene')
-        return(2)
-      }
-    } else {
-      # otherwise, point them to our New Gene Bodies Tab
-      updateLinkButton('Checkout new gene bodies we discovered')
-      return(0)
-    }
-  }
   
   #Update linkButton text on gene change
   observeEvent(input$geneSearch, {
-    switch_for_antisense <<- change_back()
-    display_antisense(0)
+    req(input$geneSearch)
+    current_ids$gene_id <- input$geneSearch
+    
+    if (nrow(tib <- just_genes_antisense %>% filter(gene_id == input$geneSearch)) > 0) {
+      current_ids$anti_sense_id <- tib$antisense_id
+      if (startsWith(current_ids$gene_id, "E")) {
+        updateLinkButton('PS. Checkout the potential anti-sense transcript(s) we found for this gene')
+        # if it is a new gene body
+      } else {
+        updateLinkButton('PS. This gene body has potential anti-sense transcript(s) for a known gene')
+      }
+    } else {
+      current_ids$anti_sense_id <- ""
+      updateLinkButton('Checkout new gene bodies we discovered')
+    }
+    
+    current_ids$showing_antisense = FALSE
   })
+  
   
   selected_new_genes <- reactiveValues(data = new_genes)
   selected_new_transcripts <- reactiveValues(data = new_transcripts)
 
+  
   # Used for the gene search bar
   updateTextInput.typeahead(session, "geneSearch", lookup, "gene_id", c(lookup$gene_name, lookup$gene_id), template, 
                             placeholder = "HUGO Ensembl ID")
+  
   
   # Use the brush to zoom in on the new gene bodies graph\
   # TODO: need to fix the hover tool tip to allow hovering on more than just the exact y line and X start
@@ -474,10 +517,12 @@ server <- function(input, output, session) {
     }
   })
   
+  
   # Reset the new gene bodies graph on click
   observeEvent(input$resetButton, {
     selected_new_genes$data <- new_genes
   })
+  
   
   # render the new gene bodies plot
   output$testing <- renderPlot({
@@ -498,22 +543,24 @@ server <- function(input, output, session) {
       #   )
   })
   
+  
   output$my_tooltip <- renderUI({
     hover <- input$plot_hover 
-    y <- nearPoints(transcript_data, input$plot_hover, xvar = "start", maxpoints = 1)
+    y <- nearPoints(selected_new_genes$data, input$plot_hover, xvar = "start", maxpoints = 1)
     req(nrow(y) != 0)
     verbatimTextOutput("vals")
   })
   
+  
   output$vals <- renderPrint({
     hover <- input$plot_hover
-    y <- nearPoints(transcript_data, input$plot_hover, xvar = "start", maxpoints = 1)
+    y <- nearPoints(selected_new_genes$data, input$plot_hover, xvar = "start", maxpoints = 1)
     req(nrow(y) != 0)
     print(paste0( "Location: ", y$seqnames, ":", y$start, "-", y$end))
   })  
   
+  
   output$selected <- DT::renderDataTable({
-    
     res <- brushedPoints(selected_new_genes$data, input$plot_brush, xvar = "start")
     
     datatable(
@@ -522,7 +569,6 @@ server <- function(input, output, session) {
         select(seqnames, start, end, strand, gene_id, transcript_id)
       )
   })
-  
   
   
   # Use the brush to zoom in on the new gene bodies graph\
@@ -534,10 +580,12 @@ server <- function(input, output, session) {
     }
   })
   
+  
   # Reset the new transcripts graph on click
   observeEvent(input$resetButton_tx, {
     selected_new_transcripts$data <- new_transcripts
   })
+  
   
   # render the new transcripts plot
   output$new_transcripts_plot <- renderPlot({
@@ -558,12 +606,14 @@ server <- function(input, output, session) {
     #   )
   })
   
+  
   output$my_tooltip_tx <- renderUI({
     hover <- input$plot_hover_tx 
     y <- nearPoints(transcript_data, input$plot_hover_tx, xvar = "start", maxpoints = 1)
     req(nrow(y) != 0)
     verbatimTextOutput("vals_tx")
   })
+  
   
   output$vals_tx <- renderPrint({
     hover <- input$plot_hover_tx
@@ -572,8 +622,8 @@ server <- function(input, output, session) {
     print(paste0( "Gene_ID: ", y$gene_id))
   })  
   
+  
   output$selected_transcripts <- DT::renderDataTable({
-    
     res <- brushedPoints(selected_new_transcripts$data, input$plot_brush_tx, xvar = "start")
     
     datatable(
@@ -587,50 +637,13 @@ server <- function(input, output, session) {
   # create the transcript/expression plot
   # this will be used to render the plot on the page and also to download
   comb_plot <- reactive({
-    # get the gene of interest
-    id <- input$geneSearch
-    if (id == "") {
-      #id <- "ENSG00000130203" # APOE
-      id <- "ENSG00000166295" # ANAPC16
-      #id <- "ENSG00000168209" # DDIT4
-      #id <- "ENSG00000219545" #UMAD1
-    }
-    
-    # will need to arrange in order
-    gene_transcripts <- transcript_data %>% 
-      filter(gene_id == id)
-    gene_expression <- expression_data %>% 
-      filter(gene_id == id)
-    
-    #grab the gene_name to print out later
-    selected_gene_name <- unique(gene_transcripts$gene_name)
-    antisense_strand <- ""
-    antisense_transcripts <- c()
-    
-    if (display_antisense() == 1 & !switch_for_antisense %in% c(0,3)) {
-      column_keep <- switch(switch_for_antisense, "NewGeneID", "Hg38v107_GeneID")
-      column_name <- switch(switch_for_antisense, "Hg38v107_GeneID", "NewGeneID")
-      current_antisense_ids <- anti_sense_data %>%
-        filter(!!sym(column_name) == id) %>%
-        select(!!sym(column_keep))
-      gene_antisense_transcripts <- left_join(current_antisense_ids %>%
-                                                rename(gene_id = !!sym(column_keep)), 
-                                              transcript_data)
-      
-      antisense_strand <- unique(gene_antisense_transcripts$strand)
-      antisense_transcripts <- unique(gene_antisense_transcripts$transcript_id)
-      
-      gene_antisense_transcripts <- gene_antisense_transcripts %>%
-        mutate(strand = unique(gene_transcripts$strand))
-      
-      gene_antisense_expression <- left_join(current_antisense_ids %>%
-                                               rename(gene_id = !!sym(column_keep)), 
-                                             expression_data) 
+    id <- current_ids$gene_id
+    gene_transcripts <- plot_data()$txs
+    gene_expression <- plot_data()$expr
+    selected_gene_name <- plot_data()$gene_name
+    antisense_strand <- plot_data()$antisense_strand
+    antisense_transcripts <- plot_data()$antisense_txs
 
-      gene_transcripts <- bind_rows(gene_transcripts, gene_antisense_transcripts)
-      gene_expression <- bind_rows(gene_expression, gene_antisense_expression)
-    }
-    
     factor_order <- gene_expression %>% 
       select(transcript_id, gene_id, annotation_status, discovery_category, sample_name, input$expressionRadio) %>%
       group_by(transcript_id) %>%
@@ -695,13 +708,10 @@ server <- function(input, output, session) {
       group_var = "transcript_id"
     )
     
-    if(display_antisense() == 1 & !switch_for_antisense %in% c(0,3)){
+    if(current_ids$showing_antisense == TRUE){
+      # fix the stand of the antisense data
       gene_rescaled <- gene_rescaled %>%
         mutate(strand = replace(strand, transcript_id %in% antisense_transcripts, antisense_strand))
-      
-      #reset linkButton
-      updateLinkButton('Reset')
-      switch_for_antisense <<- 3
     }
     
     gene_rescaled_exons <- gene_rescaled %>% filter(type == "exon")
@@ -788,7 +798,7 @@ server <- function(input, output, session) {
       list(
         plot = annotate_figure(
           ggarrange(transcriptPlt, expressionPlt, ncol=2, common.legend = TRUE, legend="bottom"),
-            top = text_grob(paste("\n",selected_gene_name, " (", id,"): ","Transcripts and Expression (", exp_type,")\n", sep = ""), face = "bold", size = 14)
+            top = text_grob(paste("\n", selected_gene_name, " (", id,"): ","Transcripts and Expression (", exp_type,")\n", sep = ""), face = "bold", size = 14)
         ),
         gene_name = selected_gene_name,
         gene_id = id,
