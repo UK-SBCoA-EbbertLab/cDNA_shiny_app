@@ -410,16 +410,6 @@ server <- function(input, output, session) {
   #id <- "ENSG00000168209" # DDIT4
   #id <- "ENSG00000219545" # UMAD1
   
-  #################################################################################################
-  
-  #TODO: ENSG00000156411 --> error with this gene ID and antisense stuff
-  # ENSG00000168658
-  # LINC03021 --> multiple different gene_ids
-  #TODO: FIX missing antisense on filters
-  
-  
-  #################################################################################################
-  
   # the base data to be displayed
   plot_data <- reactive({
     id <- current_ids$gene_id
@@ -435,7 +425,6 @@ server <- function(input, output, session) {
     selected_gene_name <- unique(gene_transcripts$gene_name)
     
     #grab the gene_name to print out later
-    # selected_gene_name <- unique(gene_transcripts$gene_name)
     antisense_strand <- ""
     antisense_transcripts <- c()
 
@@ -564,7 +553,7 @@ server <- function(input, output, session) {
   
   output$my_tooltip <- renderUI({
     hover <- input$plot_hover 
-    y <- nearPoints(transcript_data, input$plot_hover, xvar = "start", maxpoints = 1)
+    y <- nearPoints(selected_new_genes$data, input$plot_hover, xvar = "start", maxpoints = 1)
     req(nrow(y) != 0)
     verbatimTextOutput("vals")
   })
@@ -572,7 +561,7 @@ server <- function(input, output, session) {
   
   output$vals <- renderPrint({
     hover <- input$plot_hover
-    y <- nearPoints(transcript_data, input$plot_hover, xvar = "start", maxpoints = 1)
+    y <- nearPoints(selected_new_genes$data, input$plot_hover, xvar = "start", maxpoints = 1)
     req(nrow(y) != 0)
     print(paste0( "Location: ", y$seqnames, ":", y$start, "-", y$end))
   })  
