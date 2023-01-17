@@ -72,11 +72,13 @@ seqnames_levels = c("1", "2", "3", "4", "5",
 transcript_data$seqnames <- fct_rev(factor(transcript_data$seqnames, levels = seqnames_levels))
 
 new_genes <- transcript_data %>%
-  filter(type == "transcript", startsWith(gene_id, 'gene.')) %>%
+  filter(type == "transcript", startsWith(gene_id, 'BambuGene')) %>%
   arrange(seqnames)
 
+print(new_genes)
+
 new_transcripts <- transcript_data %>%
-  filter(type == "transcript", startsWith(gene_id, 'E'), startsWith(transcript_id, 'tx.')) %>%
+  filter(type == "transcript", startsWith(gene_id, 'E'), startsWith(transcript_id, 'BambuTx')) %>%
   arrange(seqnames)
 
 # expression data, formatted for plot
@@ -284,6 +286,15 @@ body <- dashboardBody(
         p("title of publication and reference", align='center'),
         box(
           width = NULL,
+          status = "info",
+          h4("Below is a plot which shows the location of transcripts from the new gene bodies that we identified. 
+            The Y axis shows the chromsome and the X axis shows the position.
+            The table underneath the plot holds rows for each of the displayed new gene bodies.
+            You can zoom in on the plot by clicking and draging to highlight the area you wish to zoom to.
+            If you would like to see the full plot again, press 'Reset Graph'.")
+          ),
+        box(
+          width = NULL,
           plotOutput("testing", 
              hover = hoverOpts(id = 'plot_hover', delay = 50), 
              brush = brushOpts(id = "plot_brush", resetOnNew = TRUE)),
@@ -342,6 +353,16 @@ body <- dashboardBody(
             fluidRow(
               h1("Page Title", align='center'),
               p("title of publication and reference", align='center'),
+              box(
+                width = NULL,
+                status = "info",
+                h4("Below is a plot which shows the location of new transcripts from known genes that we identified. 
+                  The Y axis shows the chromsome and the X axis shows the position.
+                  The transcripts are colored by _____ as indicated by Bambu. 
+                  The table underneath the plot holds rows for each of the displayed new transcripts.
+                  You can zoom in on the plot by clicking and draging to highlight the area you wish to zoom to.
+                  If you would like to see the full plot again, press 'Reset Graph'.")
+              ),
               box(
                 width = NULL,
                 plotOutput("new_transcripts_plot", 
@@ -501,7 +522,6 @@ server <- function(input, output, session) {
   
   selected_new_genes <- reactiveValues(data = new_genes)
   selected_new_transcripts <- reactiveValues(data = new_transcripts)
-
   
   # Used for the gene search bar
   updateTextInput.typeahead(session, "geneSearch", lookup, "gene_id", c(lookup$gene_name, lookup$gene_id), template, 
@@ -526,6 +546,7 @@ server <- function(input, output, session) {
   
   # render the new gene bodies plot
   output$testing <- renderPlot({
+    print(selected_new_genes$data)
       plot_new_genes <- selected_new_genes$data
       #plot transcripts
       ggplot(plot_new_genes, aes(
