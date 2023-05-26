@@ -39,35 +39,41 @@ transcript_data <- read_tsv("../../../../../mlpa241/Downloads/cDNA_files_r_shiny
   rename(seqnames = chr) %>%
   mutate(gene_name = coalesce(gene_name, gene_id))
 
-seqnames_levels = c("1", "2", "3", "4", "5", 
-                    "6", "7", "8", "9", "10", 
-                    "11", "12", "13", "14", "15", 
-                    "16", "17", "18", "19", "20", 
-                    "21", "22", "MT", "X", "Y", 
-                    "ERCC-00002", "ERCC-00003", "ERCC-00004", 
-                    "ERCC-00009", "ERCC-00012", "ERCC-00013", "ERCC-00014", "ERCC-00016", 
-                    "ERCC-00017", "ERCC-00019", "ERCC-00022", "ERCC-00024", "ERCC-00025", 
-                    "ERCC-00028", "ERCC-00031", "ERCC-00033", "ERCC-00034", "ERCC-00035", 
-                    "ERCC-00039", "ERCC-00040", "ERCC-00041", "ERCC-00042", "ERCC-00043",
-                    "ERCC-00044", "ERCC-00046", "ERCC-00048", "ERCC-00051", "ERCC-00053", 
-                    "ERCC-00054", "ERCC-00057", "ERCC-00058", "ERCC-00059", "ERCC-00060",
-                    "ERCC-00061", "ERCC-00062", "ERCC-00067", "ERCC-00069", "ERCC-00071", 
-                    "ERCC-00073", "ERCC-00074", "ERCC-00075", "ERCC-00076", "ERCC-00077", 
-                    "ERCC-00078", "ERCC-00079", "ERCC-00081", "ERCC-00083", "ERCC-00084", 
-                    "ERCC-00085", "ERCC-00086", "ERCC-00092", "ERCC-00095", "ERCC-00096", 
-                    "ERCC-00097", "ERCC-00098", "ERCC-00099", "ERCC-00104", "ERCC-00108", 
-                    "ERCC-00109", "ERCC-00111", "ERCC-00112", "ERCC-00113", "ERCC-00116",
-                    "ERCC-00117", "ERCC-00120", "ERCC-00123", "ERCC-00126", "ERCC-00130", 
-                    "ERCC-00131", "ERCC-00134", "ERCC-00136", "ERCC-00137", "ERCC-00138", 
-                    "ERCC-00142", "ERCC-00143", "ERCC-00144", "ERCC-00145", "ERCC-00147", 
-                    "ERCC-00148", "ERCC-00150", "ERCC-00154", "ERCC-00156", "ERCC-00157", 
-                    "ERCC-00158", "ERCC-00160", "ERCC-00162", "ERCC-00163", "ERCC-00164", 
-                    "ERCC-00165", "ERCC-00168", "ERCC-00170", "ERCC-00171", "GL000009.2", 
-                    "GL000194.1", "GL000195.1", "GL000205.2", "GL000213.1", "GL000216.2", 
-                    "GL000218.1", "GL000219.1", "GL000220.1", "GL000224.1", "GL000225.1", 
-                    "KI270442.1", "KI270711.1", "KI270713.1", "KI270721.1", "KI270726.1", 
-                    "KI270727.1", "KI270728.1", "KI270731.1", "KI270733.1", "KI270734.1", 
-                    "KI270744.1", "KI270750.1")
+
+#TODO update these seqnames_levels
+seqnames_levels = c('1', '2', '3', '4', '5', '6', '7', '8', '9',
+                    '10', '11', '12', '13', '14', '15', '16', '17', 
+                    '18', '19', '20', '21', '22', 'X', 'Y', 'MT',
+                     'ERCC-00002', 'ERCC-00003', 'ERCC-00004', 'ERCC-00009',
+                     'ERCC-00012', 'ERCC-00013', 'ERCC-00014', 'ERCC-00016',
+                     'ERCC-00017', 'ERCC-00019', 'ERCC-00022', 'ERCC-00024',
+                     'ERCC-00025', 'ERCC-00028', 'ERCC-00031', 'ERCC-00033',
+                     'ERCC-00034', 'ERCC-00035', 'ERCC-00039', 'ERCC-00040',
+                     'ERCC-00041', 'ERCC-00042', 'ERCC-00043', 'ERCC-00044',
+                     'ERCC-00046', 'ERCC-00048', 'ERCC-00051', 'ERCC-00053',
+                     'ERCC-00054', 'ERCC-00057', 'ERCC-00058', 'ERCC-00059',
+                     'ERCC-00060', 'ERCC-00061', 'ERCC-00062', 'ERCC-00067',
+                     'ERCC-00069', 'ERCC-00071', 'ERCC-00073', 'ERCC-00074',
+                     'ERCC-00075', 'ERCC-00076', 'ERCC-00077', 'ERCC-00078',
+                     'ERCC-00079', 'ERCC-00081', 'ERCC-00083', 'ERCC-00084',
+                     'ERCC-00085', 'ERCC-00086', 'ERCC-00092', 'ERCC-00095',
+                     'ERCC-00096', 'ERCC-00097', 'ERCC-00098', 'ERCC-00099',
+                     'ERCC-00104', 'ERCC-00108', 'ERCC-00109', 'ERCC-00111',
+                     'ERCC-00112', 'ERCC-00113', 'ERCC-00116', 'ERCC-00117',
+                     'ERCC-00120', 'ERCC-00123', 'ERCC-00126', 'ERCC-00130',
+                     'ERCC-00131', 'ERCC-00134', 'ERCC-00136', 'ERCC-00137',
+                     'ERCC-00138', 'ERCC-00142', 'ERCC-00143', 'ERCC-00144',
+                     'ERCC-00145', 'ERCC-00147', 'ERCC-00148', 'ERCC-00150',
+                     'ERCC-00154', 'ERCC-00156', 'ERCC-00157', 'ERCC-00158',
+                     'ERCC-00160', 'ERCC-00162', 'ERCC-00163', 'ERCC-00164',
+                     'ERCC-00165', 'ERCC-00168', 'ERCC-00170', 'ERCC-00171',
+                     'GL000009.2', 'GL000194.1', 'GL000195.1', 'GL000205.2',
+                     'GL000213.1', 'GL000214.1', 'GL000216.2', 'GL000218.1',
+                     'GL000219.1', 'GL000220.1', 'GL000224.1', 'GL000225.1',
+                     'KI270442.1', 'KI270519.1', 'KI270706.1', 'KI270711.1',
+                     'KI270713.1', 'KI270721.1', 'KI270726.1', 'KI270727.1',
+                     'KI270728.1', 'KI270731.1', 'KI270733.1', 'KI270734.1',
+                     'KI270742.1', 'KI270743.1', 'KI270744.1', 'KI270750.1')
 
 transcript_data$seqnames <- fct_rev(factor(transcript_data$seqnames, levels = seqnames_levels))
 
@@ -81,19 +87,32 @@ new_transcripts <- transcript_data %>%
   filter(type == "transcript", startsWith(gene_id, 'E'), startsWith(transcript_id, 'BambuTx')) %>%
   arrange(seqnames)
 
+# sample status
+sample_status <- read_tsv("../../../../../mlpa241/Downloads/cDNA_files_r_shiny/cDNA_sample_info.tsv") %>%
+  mutate(sample_status = ifelse(group == 2, "AD", "control")) %>%
+  mutate(sample_sex = ifelse(group == 2, "female", "male")) %>%
+  select(sample_name, sample_status, sample_sex)
+
+print(sample_status)
+
 # expression data, formatted for plot
 expression_data <- read_tsv("../../../../../mlpa241/Downloads/cDNA_files_r_shiny/expression_matrix_r_shiny.tsv") %>%
   left_join(transcript_data %>% select(transcript_id, annotation_status, discovery_category, transcript_biotype) %>% distinct(), by = "transcript_id") %>%
-  pivot_longer(cols=3:10, names_to = "sample_expression_type", values_to = "number") %>%
-  extract(sample_expression_type, into = c("sample_name", "expression_type"), "(.*)_([^_]+$)") %>%
-  pivot_wider(names_from = expression_type, values_from = number)
+  pivot_longer(cols=3:62, names_to = "sample_expression_type", values_to = "number") %>%
+  extract(sample_expression_type, into = c("sample_name", "expression_type"), "^([^_]*_[^_]*_[^_]*)_(.*$)") %>%
+  pivot_wider(names_from = expression_type, values_from = number) %>%
+  left_join(sample_status)
+
+print(expression_data)
 
 # Density plot data
 density_data <- read_tsv("../../../../../mlpa241/Downloads/cDNA_files_r_shiny/expression_matrix_r_shiny_GENE.tsv")
 
 
 anti_sense_data <- read_tsv("../../../../../mlpa241/Downloads/cDNA_files_r_shiny/AllNovelTranscripts_overlap_All_HG38_v107_Transcripts.tsv") %>% 
-  filter(StrandType == "OppositeStrand", startsWith(NewGeneID, "gene"), startsWith(Hg38v107_GeneID, "E")) %>% 
+  filter(NewGeneID != Hg38v107_GeneID) %>%
+  #filter(StrandType == "OppositeStrand", startsWith(NewGeneID, "BambuG"), startsWith(Hg38v107_GeneID, "E")) %>% 
+  filter(StrandType != "NoOverlap", startsWith(NewGeneID, "BambuG")) %>% 
   select(!Hg38v107_transcriptID) %>% 
   distinct()
 
@@ -121,7 +140,7 @@ has_antisense <- left_join(anti_sense_data %>%
        # add_column(is_antisense = "false")
 
 # combine into single table for lookup
-just_genes_antisense <- bind_rows(is_antisense, has_antisense)
+just_genes_overlap <- bind_rows(is_antisense, has_antisense)
 
 # gene search space
 lookup <- as.data.frame(
@@ -139,7 +158,7 @@ body <- dashboardBody(
     tabItem(
       tabName = "TEx",
       fluidRow(
-        h1("Page Title", align='center'),
+        h1("Transcript Expression", align='center'),
         p("title of publication and reference", align='center'),
         column(
           width = 12,
@@ -193,16 +212,19 @@ body <- dashboardBody(
               # option for how to color the figure
               width = NULL,
               solidHeader = TRUE,
-              radioButtons("colorRadio", label = "Color by", choices = c("Discovery" = "annotation_status", "Type of new transcript" = "discovery_category", "Transcript Biotype" = "transcript_biotype"))
+              radioButtons("colorRadio", 
+                           label = "Color by", 
+                           choices = c("Discovery" = "annotation_status", "Transcript Biotype" = "transcript_biotype", "Type of new transcript" = "discovery_category"), 
+                           selected = "transcript_biotype")
             ),
           ),
           column(
             width = 6,
             box(
-              # option for how to display expression (CPM vs Total counts)
+              # option for how to display expression (CPM vs Median counts)
               width = NULL,
               solidHeader = TRUE,
-              radioButtons("expressionRadio", label = "Expression display", choices = c("Counts Per Million (CPM)" = "CPM", "Total counts" = "counts")),
+              radioButtons("expressionRadio", label = "Expression display", choices = c("Counts Per Million (CPM)" = "CPM", "Counts" = "counts")),
               
             )
           ),
@@ -236,7 +258,7 @@ body <- dashboardBody(
           helpText(h5("Download dimensions for Density plot",align='center')),
           sliderInput("widthDensitySlider", "Width:", 3, 15, 7),
           # slider to determine height of download plot
-          sliderInput("heightDensitySlider", "Height:", 5, 15, 8)
+          sliderInput("heightDensitySlider", "Height:", 5, 15, 6)
         ),
       ),
       fluidRow(
@@ -416,7 +438,7 @@ server <- function(input, output, session) {
   # print(citation("ggpubr"))
 
   current_ids <- reactiveValues(gene_id = "ENSG00000166295", # ANAPC16
-                                 anti_sense_id = "", 
+                                 anti_sense_id = list(), 
                                  showing_antisense = FALSE)
   
   #id <- "ENSG00000130203" # APOE
@@ -428,6 +450,7 @@ server <- function(input, output, session) {
   plot_data <- reactive({
     id <- current_ids$gene_id
     antisense_id <- current_ids$anti_sense_id
+    #print(antisense_id)
 
     # will need to arrange in order
     gene_transcripts <- transcript_data %>% 
@@ -439,15 +462,19 @@ server <- function(input, output, session) {
     selected_gene_name <- unique(gene_transcripts$gene_name)
     
     #grab the gene_name to print out later
-    antisense_strand <- ""
+    antisense_strand <- tibble(transcript_id = character(), strand = character())
     antisense_transcripts <- c()
 
     if (current_ids$showing_antisense == TRUE){
       gene_antisense_transcripts <- transcript_data %>%
-        filter(gene_id == antisense_id)
+        filter(gene_id %in% antisense_id)
       gene_antisense_expression <- expression_data %>%
-        filter(gene_id == antisense_id)
-      antisense_strand <- unique(gene_antisense_transcripts$strand)
+        filter(gene_id %in% antisense_id)
+      
+      #print(gene_antisense_transcripts)
+      #print(gene_antisense_expression)
+      #print("do you see me")
+      antisense_strand <- gene_antisense_transcripts %>% select(transcript_id, strand) %>% distinct()
       antisense_transcripts <- unique(gene_antisense_transcripts$transcript_id)
       
       gene_antisense_transcripts <- gene_antisense_transcripts %>%
@@ -456,6 +483,9 @@ server <- function(input, output, session) {
       gene_transcripts <- bind_rows(gene_transcripts, gene_antisense_transcripts)
       gene_expression <- bind_rows(gene_expression, gene_antisense_expression)
     }
+    
+    #print(antisense_strand)
+    #print(antisense_transcripts)
     
     return(
       list(
@@ -471,16 +501,16 @@ server <- function(input, output, session) {
   
   # Change the data in the plot data to reflect if the user wants to see antisense or not
   observeEvent(input$linkButton, {
-    print(current_ids$gene_id)
-    if(current_ids$showing_antisense == FALSE & current_ids$anti_sense_id != "") {
+    #print(current_ids$gene_id)
+    if(current_ids$showing_antisense == FALSE & length(current_ids$anti_sense_id) != 0) {
       current_ids$showing_antisense = TRUE
       updateLinkButton('Reset')
-    } else if (current_ids$anti_sense_id != ""){
+    } else if (length(current_ids$anti_sense_id) != 0){
       current_ids$showing_antisense = FALSE
       if (startsWith(current_ids$gene_id, "E")) {
-        updateLinkButton('PS. Checkout the potential anti-sense transcript(s) we found for this gene')
+        updateLinkButton('PS. Checkout the new transcript(s) for new gene(s) we found that overlap this gene')
       } else {
-        updateLinkButton('PS. This gene body has potential anti-sense transcript(s) for a known gene')
+        updateLinkButton('PS. This gene body has transcript(s) that overlap at least 1 known gene')
       }
     } else {
       updateTabItems(session, "tabs", "ngb")
@@ -503,19 +533,20 @@ server <- function(input, output, session) {
     req(input$geneSearch)
     current_ids$gene_id <- input$geneSearch
     
-    if (nrow(tib <- just_genes_antisense %>% filter(gene_id == input$geneSearch)) > 0) {
+    if (nrow(tib <- just_genes_overlap %>% filter(gene_id == input$geneSearch)) > 0) {
       current_ids$anti_sense_id <- tib$antisense_id
       if (startsWith(current_ids$gene_id, "E")) {
-        updateLinkButton('PS. Checkout the potential anti-sense transcript(s) we found for this gene')
+        updateLinkButton('PS. Checkout the new transcript(s) for new gene(s) we found that overlap this gene')
+        #updateLinkButton('PS. Checkout the potential anti-sense transcript(s) we found for this gene')
         # if it is a new gene body
       } else {
-        updateLinkButton('PS. This gene body has potential anti-sense transcript(s) for a known gene')
+        updateLinkButton('PS. This gene body has transcript(s) that overlap at least 1 known gene')
+        #updateLinkButton('PS. This gene body has potential anti-sense transcript(s) for a known gene')
       }
     } else {
-      current_ids$anti_sense_id <- ""
+      current_ids$anti_sense_id <- list()
       updateLinkButton('Checkout new gene bodies we discovered')
     }
-    
     current_ids$showing_antisense = FALSE
   })
   
@@ -546,7 +577,7 @@ server <- function(input, output, session) {
   
   # render the new gene bodies plot
   output$testing <- renderPlot({
-    print(selected_new_genes$data)
+    #print(selected_new_genes$data)
       plot_new_genes <- selected_new_genes$data
       #plot transcripts
       ggplot(plot_new_genes, aes(
@@ -668,13 +699,15 @@ server <- function(input, output, session) {
     factor_order <- gene_expression %>% 
       select(transcript_id, gene_id, annotation_status, discovery_category, sample_name, input$expressionRadio) %>%
       group_by(transcript_id) %>%
-      mutate(exp_avg = mean(!! sym(input$expressionRadio))) %>% 
-      select(transcript_id, exp_avg) %>%
+      mutate(exp_avg = median(!! sym(input$expressionRadio))) %>% 
+      select(gene_id, transcript_id, exp_avg) %>%
       distinct() %>%
-      arrange(exp_avg) %>%
+      arrange(gene_id, exp_avg) %>%
       select(transcript_id)
     
     factor_order <- factor_order$transcript_id
+    #print(factor_order)
+    #print("banana")
     
     gene_expression$transcript_id <- factor(gene_expression$transcript_id, levels = factor_order)
     gene_transcripts$transcript_id <- factor(gene_transcripts$transcript_id, levels = factor_order)
@@ -702,6 +735,7 @@ server <- function(input, output, session) {
     
     gene_transcripts <- filter(gene_transcripts, transcript_id %in% transcripts_to_display)
     gene_expression <- filter(gene_expression, transcript_id %in% transcripts_to_display)
+    #print(gene_expression, n=100, width = Inf)
 
     # format transcripts for ggplot
     gene_exons <- gene_transcripts %>% filter(type=="exon")
@@ -732,11 +766,16 @@ server <- function(input, output, session) {
     if(current_ids$showing_antisense == TRUE){
       # fix the stand of the antisense data
       gene_rescaled <- gene_rescaled %>%
-        mutate(strand = replace(strand, transcript_id %in% antisense_transcripts, antisense_strand))
+        left_join(antisense_strand, by = 'transcript_id') %>%
+        mutate(strand = coalesce(strand.y, strand.x))
+      
+      #print(gene_rescaled, n=100, width=Inf)
     }
     
     gene_rescaled_exons <- gene_rescaled %>% filter(type == "exon")
+    gene_rescaled_exons$transcript_id <- factor(gene_rescaled_exons$transcript_id, levels = factor_order)
     gene_rescaled_introns <- gene_rescaled %>% filter(type == 'intron')
+    gene_rescaled_introns$transcript_id <- factor(gene_rescaled_introns$transcript_id, levels = factor_order)
     gene_rescaled_cds <- left_join(
       cds_exon_diff %>%
         mutate(type = "CDS") %>%
@@ -749,6 +788,10 @@ server <- function(input, output, session) {
       mutate(start = e_start+d_start) %>%
       mutate(end = e_end - d_end) %>%
       select(!c(e_start, e_end, d_start, d_end))
+    gene_rescaled_cds$transcript_id <- factor(gene_rescaled_cds$transcript_id, levels = factor_order)
+    
+    #print(gene_rescaled_cds, n=100)
+    #print('orange')
     
     # 
     if(input$colorRadio =="annotation_status") {
@@ -765,8 +808,12 @@ server <- function(input, output, session) {
             pull(!! sym(input$colorRadio))
     
     colorLevels <- setNames(hue_pal()(length(displayCategories)), levels(as.factor(displayCategories)))
+## --> color by sample status    colorPointLevels <- setNames(c("#676767", "#000000"), levels(as.factor(sample_status$sample_status)))
     
+    
+    #print(gene_rescaled_exons %>% arrange(transcript_id))
     #plot transcripts
+    
     transcriptPlt <- ggplot(gene_rescaled_exons, aes(
       xstart = start,
       xend = end,
@@ -779,17 +826,24 @@ server <- function(input, output, session) {
       geom_range(
         aes(fill = !! sym(input$colorRadio)),
         data = gene_rescaled_cds
-      ) +
+      )
+    
+    plot_bp_range <- ceiling(ggplot_build(transcriptPlt)$layout$panel_params[[1]]$x.range[2])
+
+    transcriptPlt <- transcriptPlt + 
       geom_intron(
         data = gene_rescaled_introns,
-        arrow.min.intron.length = 75*length(transcripts_to_display), # variable based on number of transcripts we are displaying
+        arrow.min.intron.length = plot_bp_range / 12,
         aes(strand = strand)
       ) + 
+      ggtitle("Transcript") +
       theme (
-        axis.title.y = element_blank()
+        axis.title.y = element_blank(), 
+        legend.title = element_text(face = "bold")
       ) + 
       scale_fill_manual(values = colorLevels) +
-      guides(fill=guide_legend(title=fill_legend_name))
+      guides(fill=guide_legend(title=paste0(fill_legend_name, ':'))) ## --> color by sample status +
+## --> color by sample status      scale_color_manual(values = colorPointLevels)
 
     expressionPlt <- ggplot(gene_expression, aes(transcript_id, !! sym(input$expressionRadio))) + 
       geom_boxplot(
@@ -798,19 +852,47 @@ server <- function(input, output, session) {
           ), 
         outlier.shape = NA
         ) + 
-      geom_jitter() + 
+      ggtitle(input$expressionRadio) +
+      geom_jitter(height=0) +
+## --> color by sample status      geom_jitter(height=0, aes(color = sample_status)) + 
       coord_flip() + 
       theme(
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
         axis.text.y=element_blank()
       ) +
-      scale_fill_manual(values = colorLevels)
+      scale_fill_manual(values = colorLevels) ## --> color by sample status +
+## --> color by sample status      scale_color_manual(values = colorPointLevels)
+    
+    relativeAbundancePlot <- ggplot(gene_expression, aes(transcript_id, relative_abundance)) +
+      geom_boxplot(
+        aes(
+          fill = !! sym(input$colorRadio)
+        ),
+        outlier.shape = NA
+      ) + 
+      ggtitle("Relative abundance (percent expression within gene)") +
+      geom_jitter(height = 0) +
+## --> color by sample status      geom_jitter(height = 0, aes(color = sample_status)) + 
+      coord_flip() +
+      theme(
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y=element_blank()
+      ) +
+      scale_fill_manual(values = colorLevels) ## --> color by sample status +
+## --> color by sample status      scale_color_manual(values = colorPointLevels)
     
     if(input$expressionRadio =="CPM") {
       exp_type <- "CPM"
     } else {
-      exp_type <- "Total Counts"
+      exp_type <- "Counts"
+    }
+    
+    if (str_detect(unique(gene_exons$seqnames), '^[0-9XYM]')) {
+      region_text <- paste0("Region: chr", unique(gene_exons$seqnames), ":", min(gene_exons$start), "-", max(gene_exons$end))
+    } else {
+      region_text <- paste0("Region: ", unique(gene_exons$seqnames), ":", min(gene_exons$start), "-", max(gene_exons$end))
     }
     
     # return plot, gene_name, and gene_id as a list so that we can access them all later for rendering the plot
@@ -818,8 +900,11 @@ server <- function(input, output, session) {
     return(
       list(
         plot = annotate_figure(
-          ggarrange(transcriptPlt, expressionPlt, ncol=2, common.legend = TRUE, legend="bottom"),
-            top = text_grob(paste("\n", selected_gene_name, " (", id,"): ","Transcripts and Expression (", exp_type,")\n", sep = ""), face = "bold", size = 14)
+          annotate_figure(
+            ggarrange(transcriptPlt, expressionPlt, relativeAbundancePlot, ncol=3, common.legend = TRUE, legend="bottom"),
+              top = text_grob(region_text)
+          ),
+          top = text_grob(paste0("\n", selected_gene_name, " (", id,"): ","Transcripts and Expression (", exp_type,")"), face = "bold", size = 20)
         ),
         gene_name = selected_gene_name,
         gene_id = id,
@@ -832,17 +917,42 @@ server <- function(input, output, session) {
   exprDensityPlot <- reactive({
     
     density_data <- density_data %>%
-      rename(CPM = average_CPM) %>%
-      rename(counts = total_counts)%>%
+      rename(CPM = median_cpm) %>%
+      rename(counts = median_counts)%>%
       filter(!! sym(input$expressionRadio) > 0)%>%
       mutate(log_comb_exp = log10(!! sym(input$expressionRadio)))
 
     plt <- ggplot(density_data, aes(x=log_comb_exp)) +
       geom_density() +
       geom_vline(xintercept = density_data$log_comb_exp[density_data$gene_id == comb_plot()$gene_id], colour = "#F8766D") + 
-      ggtitle(paste("Gene Expression: ", comb_plot()$gene_name)) + 
-      theme(plot.title = element_text(hjust = 0.5, size = 14, face = 'bold')) +
+      ggtitle(paste("All expressed genes (", input$expressionRadio, " > 0)", sep = "")) + 
+      #theme(plot.title = element_text(hjust = 0.5, size = 20, face = 'bold')) +
       ylab("Density")
+    
+    total_gene_expression <- plot_data()$expr
+    total_gene_expression <- total_gene_expression %>%
+      filter(gene_id == comb_plot()$gene_id) %>%
+      select(gene_id, sample_name, total_gene_CPM, total_gene_counts) %>%
+      rename(CPM=total_gene_CPM, counts = total_gene_counts) %>%
+      mutate(selected_exp = !! sym(input$expressionRadio))
+    
+    selected_gene_name <- plot_data()$gene_name
+    total_gene_CPM <- ggplot(distinct(total_gene_expression), aes(gene_id, selected_exp)) +
+      geom_boxplot(
+        aes(
+          fill = gene_id
+        ),
+        outlier.shape = NA,
+        show.legend = FALSE,
+        width = 0.5
+      ) + 
+      ggtitle(paste("Total gene expression:", comb_plot()$gene_name)) +
+      geom_jitter(height=0) + 
+      coord_flip() +
+      theme(
+        #plot.title = element_text(hjust = 0.5, size = 14, face = 'bold'),
+        axis.text.y=element_text(angle=90, vjust = 1, hjust=0.5)
+      ) + xlab("") + ylab(input$expressionRadio)
       
     y_ranges <- layer_scales(plt)$y$range$range
     x_ranges <- layer_scales(plt)$x$range$range
@@ -856,7 +966,7 @@ server <- function(input, output, session) {
       } else {
         plt <- plt + geom_text(aes(density_data$log_comb_exp[density_data$gene_id == comb_plot()$gene_id], y_ranges[2], label = comb_plot()$gene_name), nudge_x = 1, colour = "#F8766D")
       }
-      plt <- plt + xlab("log10 (average CPM)")
+      plt <- plt + xlab("log10 (median CPM)")
         
     } else {
       if (! comb_plot()$gene_id %in% density_data$gene_id) {
@@ -866,16 +976,21 @@ server <- function(input, output, session) {
       } else {
         plt <- plt + geom_text(aes(density_data$log_comb_exp[density_data$gene_id == comb_plot()$gene_id], y_ranges[2], label = comb_plot()$gene_name), nudge_x = 1, colour = "#F8766D")
       }
-      plt <- plt + xlab("log10 (combined total counts)")
+      plt <- plt + xlab("log10 (combined median counts)")
     }
     
-    print(plt)
+    plot = annotate_figure(
+      ggarrange(plt, total_gene_CPM, nrow=2),
+      top = text_grob(paste("Gene Expression"), face = "bold", size = 15)
+    )
+    
+    print(plot)
   })
   
   # Set the recommended size for downloading the plot
   observe({
     heightValue <- 2 + ceiling(comb_plot()$num_transcripts * 0.5)
-    widthValue <- 10 + ceiling(comb_plot()$num_transcripts * 0.1)
+    widthValue <- 16 + ceiling(comb_plot()$num_transcripts * 0.1)
     
     if (heightValue > 49){
       heightValue <- 49
