@@ -808,7 +808,7 @@ server <- function(input, output, session) {
             pull(!! sym(input$colorRadio))
     
     colorLevels <- setNames(hue_pal()(length(displayCategories)), levels(as.factor(displayCategories)))
-## --> color by sample status    colorPointLevels <- setNames(c("#676767", "#000000"), levels(as.factor(sample_status$sample_status)))
+    colorPointLevels <- setNames(c("#676767", "#000000"), levels(as.factor(sample_status$sample_status)))
     
     
     #print(gene_rescaled_exons %>% arrange(transcript_id))
@@ -842,8 +842,8 @@ server <- function(input, output, session) {
         legend.title = element_text(face = "bold")
       ) + 
       scale_fill_manual(values = colorLevels) +
-      guides(fill=guide_legend(title=paste0(fill_legend_name, ':'))) ## --> color by sample status +
-## --> color by sample status      scale_color_manual(values = colorPointLevels)
+      guides(fill=guide_legend(title=paste0(fill_legend_name, ':')))  +
+      scale_color_manual(values = colorPointLevels)
 
     expressionPlt <- ggplot(gene_expression, aes(transcript_id, !! sym(input$expressionRadio))) + 
       geom_boxplot(
@@ -853,16 +853,16 @@ server <- function(input, output, session) {
         outlier.shape = NA
         ) + 
       ggtitle(input$expressionRadio) +
-      geom_jitter(height=0) +
-## --> color by sample status      geom_jitter(height=0, aes(color = sample_status)) + 
+#      geom_jitter(height=0) +
+      geom_jitter(height=0, aes(color = sample_status)) + 
       coord_flip() + 
       theme(
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
         axis.text.y=element_blank()
       ) +
-      scale_fill_manual(values = colorLevels) ## --> color by sample status +
-## --> color by sample status      scale_color_manual(values = colorPointLevels)
+      scale_fill_manual(values = colorLevels)  +
+      scale_color_manual(values = colorPointLevels)
     
     relativeAbundancePlot <- ggplot(gene_expression, aes(transcript_id, relative_abundance)) +
       geom_boxplot(
@@ -872,16 +872,16 @@ server <- function(input, output, session) {
         outlier.shape = NA
       ) + 
       ggtitle("Relative abundance (percent expression within gene)") +
-      geom_jitter(height = 0) +
-## --> color by sample status      geom_jitter(height = 0, aes(color = sample_status)) + 
+#      geom_jitter(height = 0) +
+      geom_jitter(height = 0, aes(color = sample_status)) + 
       coord_flip() +
       theme(
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
         axis.text.y=element_blank()
       ) +
-      scale_fill_manual(values = colorLevels) ## --> color by sample status +
-## --> color by sample status      scale_color_manual(values = colorPointLevels)
+      scale_fill_manual(values = colorLevels)  +
+      scale_color_manual(values = colorPointLevels)
     
     if(input$expressionRadio =="CPM") {
       exp_type <- "CPM"
@@ -901,8 +901,9 @@ server <- function(input, output, session) {
       list(
         plot = annotate_figure(
           annotate_figure(
-            ggarrange(transcriptPlt, expressionPlt, relativeAbundancePlot, ncol=3, common.legend = TRUE, legend="bottom"),
-              top = text_grob(region_text)
+           ggarrange(transcriptPlt, expressionPlt, relativeAbundancePlot, ncol=3, common.legend = TRUE, legend="bottom"),
+             top = text_grob(region_text),
+             bottom = text_grob("This is a test")
           ),
           top = text_grob(paste0("\n", selected_gene_name, " (", id,"): ","Transcripts and Expression (", exp_type,")"), face = "bold", size = 20)
         ),
