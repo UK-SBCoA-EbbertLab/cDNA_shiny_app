@@ -845,7 +845,11 @@ server <- function(input, output, session) {
       guides(fill=guide_legend(title=paste0(fill_legend_name, ':'))) ## --> color by sample status +
 ## --> color by sample status      scale_color_manual(values = colorPointLevels)
 
-    expressionPlt <- ggplot(gene_expression, aes(transcript_id, !! sym(input$expressionRadio))) + 
+    expressionPlt <- ggplot(gene_expression, aes(transcript_id, !! sym(input$expressionRadio)))
+    if(input$expressionRadio =="CPM") {
+      expressionPlt <- expressionPlt + geom_hline(yintercept=1, linetype="dashed", color = "darkcyan")
+    }
+    expressionPlt <- expressionPlt +
       geom_boxplot(
         aes(
           fill = !! sym(input$colorRadio)
@@ -885,8 +889,10 @@ server <- function(input, output, session) {
     
     if(input$expressionRadio =="CPM") {
       exp_type <- "CPM"
+      dashed_line_legend = "The dashed line represents CPM = 1. High confidence is assumed for median CPM > 1."
     } else {
       exp_type <- "Counts"
+      dashed_line_legend = ""
     }
     
     if (str_detect(unique(gene_exons$seqnames), '^[0-9XYM]')) {
@@ -902,7 +908,8 @@ server <- function(input, output, session) {
         plot = annotate_figure(
           annotate_figure(
             ggarrange(transcriptPlt, expressionPlt, relativeAbundancePlot, ncol=3, common.legend = TRUE, legend="bottom"),
-              top = text_grob(region_text)
+              top = text_grob(region_text),
+              bottom = text_grob(dashed_line_legend, size = 10)
           ),
           top = text_grob(paste0("\n", selected_gene_name, " (", id,"): ","Transcripts and Expression (", exp_type,")"), face = "bold", size = 20)
         ),
