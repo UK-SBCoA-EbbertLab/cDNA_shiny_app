@@ -14,7 +14,7 @@ library(tidyverse)
 library(ggtranscript)
 library(ggpubr)
 library(scales)
-library(plotly)
+#library(plotly)
 library(DT)
 
 # Create the header object
@@ -35,7 +35,7 @@ sidebar <- dashboardSidebar(
 
 # load data for the app
 # transcript data, formatted for plot
-transcript_data <- read_tsv("../../../../../mlpa241/Downloads/cDNA_files_r_shiny/annotation_r_shiny.tsv") %>% 
+transcript_data <- read_tsv("cDNA_files_r_shiny/annotation_r_shiny.tsv") %>% 
   rename(seqnames = chr) %>%
   mutate(gene_name = coalesce(gene_name, gene_id))
 
@@ -88,7 +88,7 @@ new_transcripts <- transcript_data %>%
   arrange(seqnames)
 
 # sample status
-sample_status <- read_tsv("../../../../../mlpa241/Downloads/cDNA_files_r_shiny/cDNA_sample_info.tsv") %>%
+sample_status <- read_tsv("cDNA_files_r_shiny/cDNA_sample_info.tsv") %>%
   mutate(sample_status = ifelse(group == 2, "AD", "control")) %>%
   mutate(sample_sex = ifelse(group == 2, "female", "male")) %>%
   select(sample_name, sample_status, sample_sex)
@@ -96,7 +96,7 @@ sample_status <- read_tsv("../../../../../mlpa241/Downloads/cDNA_files_r_shiny/c
 print(sample_status)
 
 # expression data, formatted for plot
-expression_data <- read_tsv("../../../../../mlpa241/Downloads/cDNA_files_r_shiny/expression_matrix_r_shiny.tsv") %>%
+expression_data <- read_tsv("cDNA_files_r_shiny/expression_matrix_r_shiny.tsv") %>%
   left_join(transcript_data %>% select(transcript_id, annotation_status, discovery_category, transcript_biotype) %>% distinct(), by = "transcript_id") %>%
   pivot_longer(cols=3:62, names_to = "sample_expression_type", values_to = "number") %>%
   extract(sample_expression_type, into = c("sample_name", "expression_type"), "^([^_]*_[^_]*_[^_]*)_(.*$)") %>%
@@ -106,10 +106,10 @@ expression_data <- read_tsv("../../../../../mlpa241/Downloads/cDNA_files_r_shiny
 print(expression_data)
 
 # Density plot data
-density_data <- read_tsv("../../../../../mlpa241/Downloads/cDNA_files_r_shiny/expression_matrix_r_shiny_GENE.tsv")
+density_data <- read_tsv("cDNA_files_r_shiny/expression_matrix_r_shiny_GENE.tsv")
 
 
-anti_sense_data <- read_tsv("../../../../../mlpa241/Downloads/cDNA_files_r_shiny/AllNovelTranscripts_overlap_All_HG38_v107_Transcripts.tsv") %>% 
+anti_sense_data <- read_tsv("cDNA_files_r_shiny/AllNovelTranscripts_overlap_All_HG38_v107_Transcripts.tsv") %>% 
   filter(NewGeneID != Hg38v107_GeneID) %>%
   #filter(StrandType == "OppositeStrand", startsWith(NewGeneID, "BambuG"), startsWith(Hg38v107_GeneID, "E")) %>% 
   filter(StrandType != "NoOverlap", startsWith(NewGeneID, "BambuG")) %>% 
@@ -159,7 +159,7 @@ body <- dashboardBody(
       tabName = "TEx",
       fluidRow(
         h1("Transcript Expression", align='center'),
-        p("title of publication and reference", align='center'),
+        p("Compare the expression between different transcripts from the same gene.", align='center'),
         column(
           width = 12,
           box(
@@ -271,7 +271,8 @@ body <- dashboardBody(
           p(" ZJ D (2019). _shinysky: A Set of Shiny Components and Widgets_. R package version 0.1.3, <https://github.com/AnalytixWare/ShinySky>."),
           p("Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R, Grolemund G, Hayes A, Henry L, Hester J, Kuhn M, Pedersen TL, Miller E, Bache SM, Müller K, Ooms J, Robinson D, Seidel DP, Spinu V, Takahashi K, Vaughan D, Wilke C, Woo K, Yutani H (2019). “Welcome to the tidyverse.” _Journal of Open Source Software_, *4*(43), 1686. doi:10.21105/joss.01686 <https://doi.org/10.21105/joss.01686>."),
           p("Gustavsson EK, Zhang D, Reynolds RH, Garcia-Ruiz S, Ryten M (2022). “ggtranscript: an R package for the visualization and interpretation of transcript isoforms using ggplot2.” _Bioinformatics_. doi:10.1093/bioinformatics/btac409 <https://doi.org/10.1093/bioinformatics/btac409>, <https://academic.oup.com/bioinformatics/article/38/15/3844/6617821>."),
-          p("Kassambara A (2022). _ggpubr: 'ggplot2' Based Publication Ready Plots_. R package version 0.5.0, <https://CRAN.R-project.org/package=ggpubr>.")
+          p("Kassambara A (2022). _ggpubr: 'ggplot2' Based Publication Ready Plots_. R package version 0.5.0, <https://CRAN.R-project.org/package=ggpubr>."),
+          p("Wickham H, Seidel D (2022). _scales: Scale Functions for Visualization_. R package version 1.2.1, <https://CRAN.R-project.org/package=scales>.")
         )
       ),
     ),
@@ -304,8 +305,8 @@ body <- dashboardBody(
       '),  
             
       fluidRow(
-        h1("Page Title", align='center'),
-        p("title of publication and reference", align='center'),
+        h1("New Gene Bodies", align='center'),
+        p("New gene bodies from running Bambu discovery mode.", align='center'),
         box(
           width = NULL,
           status = "info",
@@ -340,7 +341,8 @@ body <- dashboardBody(
           p(" ZJ D (2019). _shinysky: A Set of Shiny Components and Widgets_. R package version 0.1.3, <https://github.com/AnalytixWare/ShinySky>."),
           p("Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R, Grolemund G, Hayes A, Henry L, Hester J, Kuhn M, Pedersen TL, Miller E, Bache SM, Müller K, Ooms J, Robinson D, Seidel DP, Spinu V, Takahashi K, Vaughan D, Wilke C, Woo K, Yutani H (2019). “Welcome to the tidyverse.” _Journal of Open Source Software_, *4*(43), 1686. doi:10.21105/joss.01686 <https://doi.org/10.21105/joss.01686>."),
           p("Gustavsson EK, Zhang D, Reynolds RH, Garcia-Ruiz S, Ryten M (2022). “ggtranscript: an R package for the visualization and interpretation of transcript isoforms using ggplot2.” _Bioinformatics_. doi:10.1093/bioinformatics/btac409 <https://doi.org/10.1093/bioinformatics/btac409>, <https://academic.oup.com/bioinformatics/article/38/15/3844/6617821>."),
-          p("Kassambara A (2022). _ggpubr: 'ggplot2' Based Publication Ready Plots_. R package version 0.5.0, <https://CRAN.R-project.org/package=ggpubr>.")
+          p("Kassambara A (2022). _ggpubr: 'ggplot2' Based Publication Ready Plots_. R package version 0.5.0, <https://CRAN.R-project.org/package=ggpubr>."),
+          p("Wickham H, Seidel D (2022). _scales: Scale Functions for Visualization_. R package version 1.2.1, <https://CRAN.R-project.org/package=scales>.")
         )
       ),
       uiOutput("my_tooltip")
@@ -373,14 +375,14 @@ body <- dashboardBody(
       '),  
             
             fluidRow(
-              h1("Page Title", align='center'),
-              p("title of publication and reference", align='center'),
+              h1("New Transcripts from Known Genes", align='center'),
+              p("New transcripts from running Bambu discovery mode.", align='center'),
               box(
                 width = NULL,
                 status = "info",
                 h4("Below is a plot which shows the location of new transcripts from known genes that we identified. 
                   The Y axis shows the chromsome and the X axis shows the position.
-                  The transcripts are colored by _____ as indicated by Bambu. 
+                  The transcripts are colored by discovery category as indicated by Bambu. 
                   The table underneath the plot holds rows for each of the displayed new transcripts.
                   You can zoom in on the plot by clicking and draging to highlight the area you wish to zoom to.
                   If you would like to see the full plot again, press 'Reset Graph'.")
@@ -410,7 +412,8 @@ body <- dashboardBody(
                 p(" ZJ D (2019). _shinysky: A Set of Shiny Components and Widgets_. R package version 0.1.3, <https://github.com/AnalytixWare/ShinySky>."),
                 p("Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R, Grolemund G, Hayes A, Henry L, Hester J, Kuhn M, Pedersen TL, Miller E, Bache SM, Müller K, Ooms J, Robinson D, Seidel DP, Spinu V, Takahashi K, Vaughan D, Wilke C, Woo K, Yutani H (2019). “Welcome to the tidyverse.” _Journal of Open Source Software_, *4*(43), 1686. doi:10.21105/joss.01686 <https://doi.org/10.21105/joss.01686>."),
                 p("Gustavsson EK, Zhang D, Reynolds RH, Garcia-Ruiz S, Ryten M (2022). “ggtranscript: an R package for the visualization and interpretation of transcript isoforms using ggplot2.” _Bioinformatics_. doi:10.1093/bioinformatics/btac409 <https://doi.org/10.1093/bioinformatics/btac409>, <https://academic.oup.com/bioinformatics/article/38/15/3844/6617821>."),
-                p("Kassambara A (2022). _ggpubr: 'ggplot2' Based Publication Ready Plots_. R package version 0.5.0, <https://CRAN.R-project.org/package=ggpubr>.")
+                p("Kassambara A (2022). _ggpubr: 'ggplot2' Based Publication Ready Plots_. R package version 0.5.0, <https://CRAN.R-project.org/package=ggpubr>."),
+                p("Wickham H, Seidel D (2022). _scales: Scale Functions for Visualization_. R package version 1.2.1, <https://CRAN.R-project.org/package=scales>.")
               )
             ),
             uiOutput("my_tooltip_tx")
@@ -436,6 +439,8 @@ server <- function(input, output, session) {
   # print(citation("tidyverse"))
   # print(citation("ggtranscript"))
   # print(citation("ggpubr"))
+  # print(citation("scales"))
+  print(citation("DT"))
 
   current_ids <- reactiveValues(gene_id = "ENSG00000166295", # ANAPC16
                                  anti_sense_id = list(), 
@@ -845,7 +850,11 @@ server <- function(input, output, session) {
       guides(fill=guide_legend(title=paste0(fill_legend_name, ':')))  +
       scale_color_manual(values = colorPointLevels)
 
-    expressionPlt <- ggplot(gene_expression, aes(transcript_id, !! sym(input$expressionRadio))) + 
+    expressionPlt <- ggplot(gene_expression, aes(transcript_id, !! sym(input$expressionRadio)))
+    if(input$expressionRadio =="CPM") {
+      expressionPlt <- expressionPlt + geom_hline(yintercept=1, linetype="dashed", color = "darkcyan")
+    }
+    expressionPlt <- expressionPlt +
       geom_boxplot(
         aes(
           fill = !! sym(input$colorRadio)
@@ -885,8 +894,10 @@ server <- function(input, output, session) {
     
     if(input$expressionRadio =="CPM") {
       exp_type <- "CPM"
+      dashed_line_legend = "The dashed line represents CPM = 1. High confidence is assumed for median CPM > 1."
     } else {
       exp_type <- "Counts"
+      dashed_line_legend = ""
     }
     
     if (str_detect(unique(gene_exons$seqnames), '^[0-9XYM]')) {
@@ -901,9 +912,9 @@ server <- function(input, output, session) {
       list(
         plot = annotate_figure(
           annotate_figure(
-           ggarrange(transcriptPlt, expressionPlt, relativeAbundancePlot, ncol=3, common.legend = TRUE, legend="bottom"),
-             top = text_grob(region_text),
-             bottom = text_grob("This is a test")
+            ggarrange(transcriptPlt, expressionPlt, relativeAbundancePlot, ncol=3, common.legend = TRUE, legend="bottom"),
+              top = text_grob(region_text),
+              bottom = text_grob(dashed_line_legend, size = 10)
           ),
           top = text_grob(paste0("\n", selected_gene_name, " (", id,"): ","Transcripts and Expression (", exp_type,")"), face = "bold", size = 20)
         ),
