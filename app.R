@@ -6,24 +6,16 @@
 #
 #    http://shiny.rstudio.com/
 #
-library(pryr)
+#library(pryr)
 library(shiny)
-print(mem_used())
 library(shinysky)
-print(mem_used())
 library(shinydashboard)
-print(mem_used())
 library(tidyverse)
-print(mem_used())
 library(BiocManager)
-print(mem_used())
 options(repos = BiocManager::repositories())
 library(ggtranscript)
-print(mem_used())
 library(ggpubr)
-print(mem_used())
 library(scales)
-print(mem_used())
 #library(plotly)
 library(DT)
 
@@ -43,7 +35,7 @@ sidebar <- dashboardSidebar(
   )
 )
 
-print(mem_used())
+
 
 # gene search space
 lookup <- as.data.frame(read_tsv('data_files/gene_lookup.tsv')) 
@@ -333,7 +325,7 @@ ui <- dashboardPage(
 # Define server logic 
 server <- function(input, output, session) {
   print('server starting')
-  print(mem_used())
+  
   # print(citation("shinydashboard"))
   # print(citation("shiny"))
   # print(citation("shinysky"))
@@ -347,12 +339,47 @@ server <- function(input, output, session) {
 #  print(testing)
 #  testing2=data.frame(system('sed -n "1,3p" ./cDNA_files_r_shiny/annotation_r_shiny.tsv', intern = TRUE))
 #  print(testing2)
+  seqnames_levels = c('1', '2', '3', '4', '5', '6', '7', '8', '9',
+                      '10', '11', '12', '13', '14', '15', '16', '17', 
+                      '18', '19', '20', '21', '22', 'X', 'Y', 'MT',
+                      'ERCC-00002', 'ERCC-00003', 'ERCC-00004', 'ERCC-00009',
+                      'ERCC-00012', 'ERCC-00013', 'ERCC-00014', 'ERCC-00016',
+                      'ERCC-00017', 'ERCC-00019', 'ERCC-00022', 'ERCC-00024',
+                      'ERCC-00025', 'ERCC-00028', 'ERCC-00031', 'ERCC-00033',
+                      'ERCC-00034', 'ERCC-00035', 'ERCC-00039', 'ERCC-00040',
+                      'ERCC-00041', 'ERCC-00042', 'ERCC-00043', 'ERCC-00044',
+                      'ERCC-00046', 'ERCC-00048', 'ERCC-00051', 'ERCC-00053',
+                      'ERCC-00054', 'ERCC-00057', 'ERCC-00058', 'ERCC-00059',
+                      'ERCC-00060', 'ERCC-00061', 'ERCC-00062', 'ERCC-00067',
+                      'ERCC-00069', 'ERCC-00071', 'ERCC-00073', 'ERCC-00074',
+                      'ERCC-00075', 'ERCC-00076', 'ERCC-00077', 'ERCC-00078',
+                      'ERCC-00079', 'ERCC-00081', 'ERCC-00083', 'ERCC-00084',
+                      'ERCC-00085', 'ERCC-00086', 'ERCC-00092', 'ERCC-00095',
+                      'ERCC-00096', 'ERCC-00097', 'ERCC-00098', 'ERCC-00099',
+                      'ERCC-00104', 'ERCC-00108', 'ERCC-00109', 'ERCC-00111',
+                      'ERCC-00112', 'ERCC-00113', 'ERCC-00116', 'ERCC-00117',
+                      'ERCC-00120', 'ERCC-00123', 'ERCC-00126', 'ERCC-00130',
+                      'ERCC-00131', 'ERCC-00134', 'ERCC-00136', 'ERCC-00137',
+                      'ERCC-00138', 'ERCC-00142', 'ERCC-00143', 'ERCC-00144',
+                      'ERCC-00145', 'ERCC-00147', 'ERCC-00148', 'ERCC-00150',
+                      'ERCC-00154', 'ERCC-00156', 'ERCC-00157', 'ERCC-00158',
+                      'ERCC-00160', 'ERCC-00162', 'ERCC-00163', 'ERCC-00164',
+                      'ERCC-00165', 'ERCC-00168', 'ERCC-00170', 'ERCC-00171',
+                      'GL000009.2', 'GL000194.1', 'GL000195.1', 'GL000205.2',
+                      'GL000213.1', 'GL000214.1', 'GL000216.2', 'GL000218.1',
+                      'GL000219.1', 'GL000220.1', 'GL000224.1', 'GL000225.1',
+                      'KI270442.1', 'KI270519.1', 'KI270706.1', 'KI270711.1',
+                      'KI270713.1', 'KI270721.1', 'KI270726.1', 'KI270727.1',
+                      'KI270728.1', 'KI270731.1', 'KI270733.1', 'KI270734.1',
+                      'KI270742.1', 'KI270743.1', 'KI270744.1', 'KI270750.1')
   
-  transcript_data <- read_tsv("data_files/transcript_data.tsv", lazy = TRUE)
+  transcript_data <- tibble()
   new_genes <- read_tsv("data_files/new_genes.tsv", lazy = TRUE)
+  new_genes$seqnames <- fct_rev(factor(new_genes$seqnames, levels = seqnames_levels))
   new_transcripts <- read_tsv("data_files/new_transcripts.tsv", lazy = TRUE)
+  new_transcripts$seqnames <- fct_rev(factor(new_transcripts$seqnames, levels = seqnames_levels))
   sample_status <- read_tsv("data_files/sample_status.tsv", lazy = TRUE)
-  expression_data <- read_tsv("data_files/expression_data.tsv", lazy = TRUE)
+  expression_data <- tibble()
   anti_sense_data <- read_tsv("data_files/anti_sense_data.tsv", lazy = TRUE)
   just_genes <- read_tsv("data_files/just_genes.tsv", lazy = TRUE)
   just_genes_overlap <- read_tsv("data_files/antisense.tsv", lazy = TRUE)
@@ -371,12 +398,18 @@ server <- function(input, output, session) {
     id <- current_ids$gene_id
     antisense_id <- current_ids$anti_sense_id
     #print(antisense_id)
+    
+    transcript_data <- read_tsv(paste0("data_files/transcript_data_chr", unique(filter(lookup, gene_id == id) %>% pull(seqnames)),".tsv"))
+    expression_data <- read_tsv(paste0("data_files/expression_data_chr", unique(filter(lookup, gene_id == id) %>% pull(seqnames)),".tsv"))
+    
 
     # will need to arrange in order
     gene_transcripts <- transcript_data %>% 
       filter(gene_id == id)
     gene_expression <- expression_data %>% 
       filter(gene_id == id)
+    
+    print('this filter was good...')
     
     # #grab the gene_name to print out later
     selected_gene_name <- unique(gene_transcripts$gene_name)
@@ -413,7 +446,9 @@ server <- function(input, output, session) {
         expr = gene_expression,
         antisense_strand = antisense_strand,
         antisense_txs = antisense_transcripts,
-        gene_name = selected_gene_name
+        gene_name = selected_gene_name,
+        transcript_d = transcript_data,
+        expression_d = expression_data
       )
     )
   })
@@ -610,13 +645,15 @@ server <- function(input, output, session) {
   # this will be used to render the plot on the page and also to download
   comb_plot <- reactive({
     print("combPlot")
-    print(mem_used())
+    
     id <- current_ids$gene_id
     gene_transcripts <- plot_data()$txs
     gene_expression <- plot_data()$expr
     selected_gene_name <- plot_data()$gene_name
     antisense_strand <- plot_data()$antisense_strand
     antisense_transcripts <- plot_data()$antisense_txs
+    expression_data <- plot_data()$expression_d
+    transcript_data <- plot_data()$transcript_d
 
     factor_order <- gene_expression %>% 
       select(transcript_id, gene_id, annotation_status, discovery_category, sample_name, input$expressionRadio) %>%
@@ -823,7 +860,7 @@ server <- function(input, output, session) {
       region_text <- paste0("Region: ", unique(gene_exons$seqnames), ":", min(gene_exons$start), "-", max(gene_exons$end))
     }
     print('end of comb plot')
-    print(mem_used())
+    
     
     # return plot, gene_name, and gene_id as a list so that we can access them all later for rendering the plot
     # and for downloading it
@@ -847,7 +884,7 @@ server <- function(input, output, session) {
   
   exprDensityPlot <- reactive({
     print('beginning of exprDensityPlot')
-    print(mem_used())
+    
     
     #TODO load the ggplot here
     
@@ -886,7 +923,7 @@ server <- function(input, output, session) {
       rename(CPM=total_gene_CPM, counts = total_gene_counts) %>%
       mutate(selected_exp = !! sym(input$expressionRadio))
     print("middle of density")
-    print(mem_used())
+    
     
     selected_gene_name <- plot_data()$gene_name
     total_gene_CPM <- ggplot(distinct(total_gene_expression), aes(gene_id, selected_exp)) +
@@ -936,7 +973,7 @@ server <- function(input, output, session) {
       top = text_grob(paste("Gene Expression"), face = "bold", size = 15)
     )
     print('end of exprDensity')
-    print(mem_used())
+    
     print(plot)
   })
   

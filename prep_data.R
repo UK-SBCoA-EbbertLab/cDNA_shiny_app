@@ -59,7 +59,7 @@ sample_status <- read_tsv("../cDNA_files_r_shiny/cDNA_sample_info.tsv") %>%
 
 # expression data, formatted for plot
 expression_data <- read_tsv("../cDNA_files_r_shiny/expression_matrix_r_shiny.tsv") %>%
-  left_join(transcript_data %>% select(transcript_id, annotation_status, discovery_category, transcript_biotype) %>% distinct(), by = "transcript_id") %>%
+  left_join(transcript_data %>% select(seqnames, transcript_id, annotation_status, discovery_category, transcript_biotype) %>% distinct(), by = "transcript_id") %>%
   pivot_longer(cols=3:62, names_to = "sample_expression_type", values_to = "number") %>%
   extract(sample_expression_type, into = c("sample_name", "expression_type"), "^([^_]*_[^_]*_[^_]*)_(.*$)") %>%
   pivot_wider(names_from = expression_type, values_from = number) %>%
@@ -98,24 +98,20 @@ has_antisense <- left_join(anti_sense_data %>%
 # combine into single table for lookup
 just_genes_overlap <- bind_rows(is_antisense, has_antisense)
 
-# gene search space
-lookup <- as.data.frame(
-  transcript_data %>%
-    select(gene_id, gene_name) %>%
-    distinct(gene_id, gene_name)
-)
+for (i in seqnames_levels) {
+  write_tsv(transcript_data %>% filter(seqnames == i), paste0("data_files/transcript_data_chr",i, ".tsv"))
+  write_tsv(expression_data %>% filter(seqnames == i), paste0("data_files/expression_data_chr", i, ".tsv"))
+}
 
-write_tsv(transcript_data, "data_files/transcript_data.tsv")
 write_tsv(new_genes, "data_files/new_genes.tsv")
 write_tsv(new_transcripts, "data_files/new_transcripts.tsv")
 write_tsv(sample_status, "data_files/sample_status.tsv")
-write_tsv(expression_data, "data_files/expression_data.tsv")
 write_tsv(anti_sense_data, "data_files/anti_sense_data.tsv")
 write_tsv(just_genes, "data_files/just_genes.tsv")
 write_tsv(just_genes_overlap, "data_files/antisense.tsv")
 write_tsv(transcript_data %>%
-            select(gene_id, gene_name) %>%
-            distinct(gene_id, gene_name), "data_files/gene_lookup.tsv")
+            select(gene_id, gene_name, seqnames) %>%
+            distinct(gene_id, gene_name, seqnames), "data_files/gene_lookup.tsv")
 
 # Density plot data - CPM
 density_data <- read_tsv("cDNA_files_r_shiny/expression_matrix_r_shiny_GENE.tsv") %>%
