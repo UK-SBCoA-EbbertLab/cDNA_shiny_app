@@ -18,6 +18,12 @@ library(ggpubr)
 library(scales)
 library(DT)
 
+# Warning: Using the `size` aesthetic in this geom was deprecated in ggplot2 3.4.0.
+# ℹ Please use `linewidth` in the `default_aes` field and elsewhere instead.
+# This warning is displayed once every 8 hours.
+# Call `lifecycle::last_lifecycle_warnings()` to see where this warning was generated.
+
+
 # Create the header object
 header <- dashboardHeader(
   title = "Ebbert Lab"
@@ -930,6 +936,7 @@ server <- function(input, output, session) {
       ggarrange(plt, total_gene_CPM, nrow=2),
       top = text_grob(paste("Gene Expression"), face = "bold", size = 15)
     )
+    print(plot)
   })
   
   # Set the recommended size for downloading the plot
