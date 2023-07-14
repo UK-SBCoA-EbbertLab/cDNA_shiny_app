@@ -6,7 +6,7 @@
 #
 #    http://shiny.rstudio.com/
 #
-library(pryr)
+#library(pryr)
 library(shiny)
 library(shinysky)
 library(shinydashboard)
@@ -17,8 +17,6 @@ library(ggtranscript)
 library(ggpubr)
 library(scales)
 library(DT)
-
-print(mem_used())
 
 # Create the header object
 header <- dashboardHeader(
@@ -326,7 +324,6 @@ ui <- dashboardPage(
 # Define server logic 
 server <- function(input, output, session) {
   print('server starting')
-  print(mem_used())
   
   # print(citation("shinydashboard"))
   # print(citation("shiny"))
@@ -398,9 +395,6 @@ server <- function(input, output, session) {
     gene_expression <- read_tsv(paste0("data_files/exd_", id_key,".tsv")) %>% #, col_names = c("transcript_id", "gene_id", "seqnames", "annotation_status", "discovery_category", "transcript_biotype", "sample_name", "counts", "CPM", "total_gene_CPM", "relative_abundance", "total_gene_counts", "sample_status", "sample_sex"))
       filter(gene_id == id)
     
-    print('this filter was good...') 
-    print(mem_used())
-    
     # #grab the gene_name to print out later
     selected_gene_name <- unique(gene_transcripts$gene_name)
     
@@ -444,7 +438,6 @@ server <- function(input, output, session) {
   
   # Change the data in the plot data to reflect if the user wants to see antisense or not
   observeEvent(input$linkButton, {
-    #print(current_ids$gene_id)
     if(current_ids$showing_antisense == FALSE & length(current_ids$anti_sense_id) != 0) {
       current_ids$showing_antisense = TRUE
       updateLinkButton('Reset')
@@ -640,7 +633,6 @@ server <- function(input, output, session) {
   # create the transcript/expression plot
   # this will be used to render the plot on the page and also to download
   comb_plot <- reactive({
-    print("combPlot")
     
     id <- current_ids$gene_id
     gene_transcripts <- plot_data()$txs
@@ -741,11 +733,6 @@ server <- function(input, output, session) {
       select(!c(e_start, e_end, d_start, d_end))
     gene_rescaled_cds$transcript_id <- factor(gene_rescaled_cds$transcript_id, levels = factor_order)
     
-    
-    
-    #print(gene_rescaled_cds, n=100)
-    #print('orange')
-    
     # 
     if(input$colorRadio =="annotation_status") {
       fill_legend_name <- "Annotation Status"
@@ -763,8 +750,6 @@ server <- function(input, output, session) {
     colorLevels <- setNames(hue_pal()(length(displayCategories)), levels(as.factor(displayCategories)))
 ## --> color by sample status    colorPointLevels <- setNames(c("#676767", "#000000"), levels(as.factor(sample_status$sample_status)))
     
-    
-    #print(gene_rescaled_exons %>% arrange(transcript_id))
     #plot transcripts
     
     transcriptPlt <- ggplot(gene_rescaled_exons, aes(
@@ -853,9 +838,6 @@ server <- function(input, output, session) {
     } else {
       region_text <- paste0("Region: ", unique(gene_exons$seqnames), ":", min(gene_exons$start), "-", max(gene_exons$end))
     }
-    print('end of comb plot')
-    print(id)
-    print(mem_used())
     
     # return plot, gene_name, and gene_id as a list so that we can access them all later for rendering the plot
     # and for downloading it
@@ -878,32 +860,15 @@ server <- function(input, output, session) {
   })
   
   exprDensityPlot <- reactive({
-    print('beginning of exprDensityPlot')
-    print(mem_used())
-    
-    #TODO load the ggplot here
-    
+
     if (input$expressionRadio == "CPM") {
       load("data_files/density_base_CPM.Rdata")
     } else {
       load("data_files/density_base_counts.Rdata")
     }
-    print(object.size(density_data))
-    print(comb_plot()$gene_id)
-    print(density_data)
+
     density_data <- density_data %>%
       filter(gene_id == comb_plot()$gene_id)
-    
-    # density_data <- density_data %>%
-    #   rename(CPM = median_cpm) %>%
-    #   rename(counts = median_counts)%>%
-    #   filter(!! sym(input$expressionRadio) > 0)%>%
-    #   mutate(log_comb_exp = log10(!! sym(input$expressionRadio)))
-
-    # plt <- ggplot(density_data, aes(x=log_comb_exp)) +
-    #   geom_density() +
-    print(object.size(plt))
-    print(object.size(density_data))
     
     plt <- plt +
       geom_vline(xintercept = density_data$log_comb_exp[density_data$gene_id == comb_plot()$gene_id], colour = "#F8766D") + 
@@ -911,18 +876,13 @@ server <- function(input, output, session) {
       #theme(plot.title = element_text(hjust = 0.5, size = 20, face = 'bold')) +
       ylab("Density")
     
-    print(object.size(plt))
-    print(mem_used())
-    
     total_gene_expression <- plot_data()$expr
     total_gene_expression <- total_gene_expression %>%
       filter(gene_id == comb_plot()$gene_id) %>%
       select(gene_id, sample_name, total_gene_CPM, total_gene_counts) %>%
       rename(CPM=total_gene_CPM, counts = total_gene_counts) %>%
       mutate(selected_exp = !! sym(input$expressionRadio))
-    print("middle of density")
-    
-    
+
     selected_gene_name <- plot_data()$gene_name
     total_gene_CPM <- ggplot(distinct(total_gene_expression), aes(gene_id, selected_exp)) +
       geom_boxplot(
@@ -970,9 +930,6 @@ server <- function(input, output, session) {
       ggarrange(plt, total_gene_CPM, nrow=2),
       top = text_grob(paste("Gene Expression"), face = "bold", size = 15)
     )
-    print('end of exprDensity')
-    print(mem_used())
-    print(plot)
   })
   
   # Set the recommended size for downloading the plot
