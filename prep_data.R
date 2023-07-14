@@ -98,9 +98,26 @@ has_antisense <- left_join(anti_sense_data %>%
 # combine into single table for lookup
 just_genes_overlap <- bind_rows(is_antisense, has_antisense)
 
-for (i in seqnames_levels) {
-  write_tsv(transcript_data %>% filter(seqnames == i), paste0("data_files/transcript_data_chr",i, ".tsv"))
-  write_tsv(expression_data %>% filter(seqnames == i), paste0("data_files/expression_data_chr", i, ".tsv"))
+gene_lookup <- transcript_data %>%
+  select(gene_id, gene_name) %>%
+  distinct(gene_id, gene_name) 
+
+bambu_gene_lookup <- gene_lookup %>%
+  filter(grepl('Bambu', gene_id)) %>%
+  arrange(gene_id) %>%
+  mutate(key_file = 'B')
+  
+ensembl_gene_lookup <- gene_lookup %>%
+  filter(!grepl('Bambu', gene_id)) %>%
+  arrange(gene_id) %>%
+  mutate(key_file = as.character(floor(row_number()/256) + 1))
+
+gene_lookup <- bind_rows(bambu_gene_lookup, ensembl_gene_lookup)
+
+for (i in (gene_lookup %>% select(key_file) %>% distinct(key_file) %>% pull(key_file))) {
+  gene_ids <- gene_lookup %>% filter(key_file == i) %>% pull(gene_id)
+  write_tsv(transcript_data %>% filter(gene_id %in% gene_ids), paste0("data_files/txd_",i, ".tsv"))
+  write_tsv(expression_data %>% filter(gene_id %in% gene_ids), paste0("data_files/exd_", i, ".tsv"))
 }
 
 write_tsv(new_genes, "data_files/new_genes.tsv")
@@ -109,9 +126,7 @@ write_tsv(sample_status, "data_files/sample_status.tsv")
 write_tsv(anti_sense_data, "data_files/anti_sense_data.tsv")
 write_tsv(just_genes, "data_files/just_genes.tsv")
 write_tsv(just_genes_overlap, "data_files/antisense.tsv")
-write_tsv(transcript_data %>%
-            select(gene_id, gene_name, seqnames) %>%
-            distinct(gene_id, gene_name, seqnames), "data_files/gene_lookup.tsv")
+write_tsv(gene_lookup, "data_files/gene_lookup.tsv")
 
 # Density plot data - CPM
 density_data <- read_tsv("cDNA_files_r_shiny/expression_matrix_r_shiny_GENE.tsv") %>%
@@ -136,4 +151,19 @@ plt <- ggplot(density_data, aes(x=log_comb_exp)) +
   geom_density()
 
 save(plt, density_data, file = 'data_files/density_base_counts.Rdata')
+
+write_tsv(transcript_data %>%
+            select(annotation_status) %>%
+            distinct(annotation_status) %>%
+            mutate(display_color = annotation_status), 'data_files/display_color_annotation_status.tsv')
+
+write_tsv(transcript_data %>%
+            select(transcript_biotype) %>%
+            distinct(transcript_biotype) %>%
+            mutate(display_color = transcript_biotype), 'data_files/display_color_transcript_biotype.tsv')
+
+write_tsv(transcript_data %>%
+            select(discovery_category) %>%
+            distinct(discovery_category) %>%
+            mutate(display_color = discovery_category), 'data_files/display_color_discovery_category.tsv')
 

@@ -6,7 +6,7 @@
 #
 #    http://shiny.rstudio.com/
 #
-#library(pryr)
+library(pryr)
 library(shiny)
 library(shinysky)
 library(shinydashboard)
@@ -16,8 +16,9 @@ options(repos = BiocManager::repositories())
 library(ggtranscript)
 library(ggpubr)
 library(scales)
-#library(plotly)
 library(DT)
+
+print(mem_used())
 
 # Create the header object
 header <- dashboardHeader(
@@ -35,10 +36,10 @@ sidebar <- dashboardSidebar(
   )
 )
 
-
-
 # gene search space
 lookup <- as.data.frame(read_tsv('data_files/gene_lookup.tsv')) 
+
+display_categories <- read_tsv('data_files/display_color.tsv')
 
 template <- HTML("<strong><em>{{gene_name}}</em></strong> <p> <font size=\"2\"><em>{{gene_id}}</em></font> ")
 
@@ -325,6 +326,7 @@ ui <- dashboardPage(
 # Define server logic 
 server <- function(input, output, session) {
   print('server starting')
+  print(mem_used())
   
   # print(citation("shinydashboard"))
   # print(citation("shiny"))
@@ -334,11 +336,7 @@ server <- function(input, output, session) {
   # print(citation("ggpubr"))
   # print(citation("scales"))
   # print(citation("DT"))
-  
-#  testing = system('sed -n "1,3p" ./cDNA_files_r_shiny/annotation_r_shiny.tsv', intern = TRUE)
-#  print(testing)
-#  testing2=data.frame(system('sed -n "1,3p" ./cDNA_files_r_shiny/annotation_r_shiny.tsv', intern = TRUE))
-#  print(testing2)
+
   seqnames_levels = c('1', '2', '3', '4', '5', '6', '7', '8', '9',
                       '10', '11', '12', '13', '14', '15', '16', '17', 
                       '18', '19', '20', '21', '22', 'X', 'Y', 'MT',
@@ -373,15 +371,11 @@ server <- function(input, output, session) {
                       'KI270728.1', 'KI270731.1', 'KI270733.1', 'KI270734.1',
                       'KI270742.1', 'KI270743.1', 'KI270744.1', 'KI270750.1')
   
-  transcript_data <- tibble()
   new_genes <- read_tsv("data_files/new_genes.tsv", lazy = TRUE)
   new_genes$seqnames <- fct_rev(factor(new_genes$seqnames, levels = seqnames_levels))
   new_transcripts <- read_tsv("data_files/new_transcripts.tsv", lazy = TRUE)
   new_transcripts$seqnames <- fct_rev(factor(new_transcripts$seqnames, levels = seqnames_levels))
-  sample_status <- read_tsv("data_files/sample_status.tsv", lazy = TRUE)
-  expression_data <- tibble()
-  anti_sense_data <- read_tsv("data_files/anti_sense_data.tsv", lazy = TRUE)
-  just_genes <- read_tsv("data_files/just_genes.tsv", lazy = TRUE)
+  #sample_status <- read_tsv("data_files/sample_status.tsv", lazy = TRUE)
   just_genes_overlap <- read_tsv("data_files/antisense.tsv", lazy = TRUE)
 
   current_ids <- reactiveValues(gene_id = "ENSG00000166295", # ANAPC16
@@ -397,19 +391,15 @@ server <- function(input, output, session) {
   plot_data <- reactive({
     id <- current_ids$gene_id
     antisense_id <- current_ids$anti_sense_id
-    #print(antisense_id)
+    id_key <- filter(lookup, gene_id == id)$key_file
     
-    transcript_data <- read_tsv(paste0("data_files/transcript_data_chr", unique(filter(lookup, gene_id == id) %>% pull(seqnames)),".tsv"))
-    expression_data <- read_tsv(paste0("data_files/expression_data_chr", unique(filter(lookup, gene_id == id) %>% pull(seqnames)),".tsv"))
-    
-
-    # will need to arrange in order
-    gene_transcripts <- transcript_data %>% 
+    gene_transcripts <- read_tsv(paste0("data_files/txd_", id_key,".tsv")) %>% #, col_names = c("seqnames", "type", "start", "end", "strand", "gene_id", "gene_name", "transcript_id", "transcript_biotype", "exon_number", "annotation_status", "discovery_category"))
       filter(gene_id == id)
-    gene_expression <- expression_data %>% 
+    gene_expression <- read_tsv(paste0("data_files/exd_", id_key,".tsv")) %>% #, col_names = c("transcript_id", "gene_id", "seqnames", "annotation_status", "discovery_category", "transcript_biotype", "sample_name", "counts", "CPM", "total_gene_CPM", "relative_abundance", "total_gene_counts", "sample_status", "sample_sex"))
       filter(gene_id == id)
     
-    print('this filter was good...')
+    print('this filter was good...') 
+    print(mem_used())
     
     # #grab the gene_name to print out later
     selected_gene_name <- unique(gene_transcripts$gene_name)
@@ -419,26 +409,26 @@ server <- function(input, output, session) {
     antisense_transcripts <- c()
 
     if (current_ids$showing_antisense == TRUE){
-      gene_antisense_transcripts <- transcript_data %>%
-        filter(gene_id %in% antisense_id)
-      gene_antisense_expression <- expression_data %>%
-        filter(gene_id %in% antisense_id)
+      gene_antisense_transcripts <- gene_transcripts %>% filter(gene_id == 0)
+      gene_antisense_expression <- gene_expression %>% filter(gene_id == 0)
       
-      #print(gene_antisense_transcripts)
-      #print(gene_antisense_expression)
-      #print("do you see me")
+      for (gid in antisense_id){
+        anti_key <- filter(lookup, gene_id == gid)$key_file
+        gene_antisense_transcripts <- bind_rows(gene_antisense_transcripts, read_tsv(paste0("data_files/txd_", anti_key,".tsv"))) %>% #, col_names = c("seqnames", "type", "start", "end", "strand", "gene_id", "gene_name", "transcript_id", "transcript_biotype", "exon_number", "annotation_status", "discovery_category")))
+          filter(gene_id == gid)
+        gene_antisense_expression <- bind_rows(gene_antisense_expression, read_tsv(paste0("data_files/exd_", anti_key,".tsv"))) %>% #, col_names = c("transcript_id", "gene_id", "seqnames", "annotation_status", "discovery_category", "transcript_biotype", "sample_name", "counts", "CPM", "total_gene_CPM", "relative_abundance", "total_gene_counts", "sample_status", "sample_sex")))
+          filter(gene_id == gid)
+      }
+      
       antisense_strand <- gene_antisense_transcripts %>% select(transcript_id, strand) %>% distinct()
       antisense_transcripts <- unique(gene_antisense_transcripts$transcript_id)
       
       gene_antisense_transcripts <- gene_antisense_transcripts %>%
-            mutate(strand = unique(gene_transcripts$strand))
+        mutate(strand = unique(gene_transcripts$strand))
       
       gene_transcripts <- bind_rows(gene_transcripts, gene_antisense_transcripts)
       gene_expression <- bind_rows(gene_expression, gene_antisense_expression)
     }
-    
-    #print(antisense_strand)
-    #print(antisense_transcripts)
     
     return(
       list(
@@ -446,9 +436,7 @@ server <- function(input, output, session) {
         expr = gene_expression,
         antisense_strand = antisense_strand,
         antisense_txs = antisense_transcripts,
-        gene_name = selected_gene_name,
-        transcript_d = transcript_data,
-        expression_d = expression_data
+        gene_name = selected_gene_name
       )
     )
   })
@@ -596,6 +584,13 @@ server <- function(input, output, session) {
   
   # render the new transcripts plot
   output$new_transcripts_plot <- renderPlot({
+    displayCategories <- display_categories %>%
+      select(discovery_category) %>%
+      drop_na() %>%
+      pull(discovery_category)
+
+    colorLevels <- setNames(hue_pal()(length(displayCategories)), levels(as.factor(displayCategories)))
+
     plot_new_transcripts <- selected_new_transcripts$data
     #plot transcripts
     ggplot(plot_new_transcripts, aes(
@@ -607,16 +602,17 @@ server <- function(input, output, session) {
         aes(fill = discovery_category),
       ) +
       scale_x_continuous(labels = comma) + 
-      theme(legend.position="bottom")
+      theme(legend.position="bottom") +
+      scale_fill_manual(values = colorLevels)
     #   theme (
     #     axis.title.y = element_blank()
-    #   )
+    #   ) 
   })
   
   
   output$my_tooltip_tx <- renderUI({
     hover <- input$plot_hover_tx 
-    y <- nearPoints(transcript_data, input$plot_hover_tx, xvar = "start", maxpoints = 1)
+    y <- nearPoints(selected_new_transcripts$data, input$plot_hover_tx, xvar = "start", maxpoints = 1)
     req(nrow(y) != 0)
     verbatimTextOutput("vals_tx")
   })
@@ -624,7 +620,7 @@ server <- function(input, output, session) {
   
   output$vals_tx <- renderPrint({
     hover <- input$plot_hover_tx
-    y <- nearPoints(transcript_data, input$plot_hover_tx, xvar = "start", maxpoints = 1)
+    y <- nearPoints(selected_new_transcripts$data, input$plot_hover_tx, xvar = "start", maxpoints = 1)
     req(nrow(y) != 0)
     print(paste0( "Gene_ID: ", y$gene_id))
   })  
@@ -652,9 +648,7 @@ server <- function(input, output, session) {
     selected_gene_name <- plot_data()$gene_name
     antisense_strand <- plot_data()$antisense_strand
     antisense_transcripts <- plot_data()$antisense_txs
-    expression_data <- plot_data()$expression_d
-    transcript_data <- plot_data()$transcript_d
-
+    
     factor_order <- gene_expression %>% 
       select(transcript_id, gene_id, annotation_status, discovery_category, sample_name, input$expressionRadio) %>%
       group_by(transcript_id) %>%
@@ -665,9 +659,7 @@ server <- function(input, output, session) {
       select(transcript_id)
     
     factor_order <- factor_order$transcript_id
-    #print(factor_order)
-    #print("banana")
-    
+
     gene_expression$transcript_id <- factor(gene_expression$transcript_id, levels = factor_order)
     gene_transcripts$transcript_id <- factor(gene_transcripts$transcript_id, levels = factor_order)
     
@@ -749,6 +741,8 @@ server <- function(input, output, session) {
       select(!c(e_start, e_end, d_start, d_end))
     gene_rescaled_cds$transcript_id <- factor(gene_rescaled_cds$transcript_id, levels = factor_order)
     
+    
+    
     #print(gene_rescaled_cds, n=100)
     #print('orange')
     
@@ -761,10 +755,10 @@ server <- function(input, output, session) {
       fill_legend_name <- "Discovery Category"
     }
     
-    displayCategories <- transcript_data %>%
-            select(!! sym(input$colorRadio)) %>%
-            distinct(!! sym(input$colorRadio)) %>%
-            pull(!! sym(input$colorRadio))
+    displayCategories <- display_categories %>%
+      select(!! sym(input$colorRadio)) %>%
+      drop_na() %>%
+      pull(!! sym(input$colorRadio))
     
     colorLevels <- setNames(hue_pal()(length(displayCategories)), levels(as.factor(displayCategories)))
 ## --> color by sample status    colorPointLevels <- setNames(c("#676767", "#000000"), levels(as.factor(sample_status$sample_status)))
@@ -860,7 +854,8 @@ server <- function(input, output, session) {
       region_text <- paste0("Region: ", unique(gene_exons$seqnames), ":", min(gene_exons$start), "-", max(gene_exons$end))
     }
     print('end of comb plot')
-    
+    print(id)
+    print(mem_used())
     
     # return plot, gene_name, and gene_id as a list so that we can access them all later for rendering the plot
     # and for downloading it
@@ -884,7 +879,7 @@ server <- function(input, output, session) {
   
   exprDensityPlot <- reactive({
     print('beginning of exprDensityPlot')
-    
+    print(mem_used())
     
     #TODO load the ggplot here
     
@@ -894,6 +889,8 @@ server <- function(input, output, session) {
       load("data_files/density_base_counts.Rdata")
     }
     print(object.size(density_data))
+    print(comb_plot()$gene_id)
+    print(density_data)
     density_data <- density_data %>%
       filter(gene_id == comb_plot()$gene_id)
     
@@ -915,6 +912,7 @@ server <- function(input, output, session) {
       ylab("Density")
     
     print(object.size(plt))
+    print(mem_used())
     
     total_gene_expression <- plot_data()$expr
     total_gene_expression <- total_gene_expression %>%
@@ -973,7 +971,7 @@ server <- function(input, output, session) {
       top = text_grob(paste("Gene Expression"), face = "bold", size = 15)
     )
     print('end of exprDensity')
-    
+    print(mem_used())
     print(plot)
   })
   
