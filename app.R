@@ -33,10 +33,10 @@ header <- dashboardHeader(
 sidebar <- dashboardSidebar(
   sidebarMenu(
     id = "tabs",
-    menuItem("Transcript Expression", tabName = "TEx", icon = icon("stats", lib = "glyphicon")),
+    menuItem("Brain RNA IsoSeq", tabName = "TEx", icon = icon("stats", lib = "glyphicon")),
     menuItem("New Gene Bodies", tabName = "ngb", icon = icon("plus", lib = "glyphicon")),
-    menuItem("New Transcripts", tabName = "ntx", icon = icon("plus", lib = "glyphicon")),
-    menuItem("Ebbert Lab Website", href = "https://ebbertlab.com/", icon = icon("new-window", lib = "glyphicon"))
+    menuItem("New Transcripts", tabName = "ntx", icon = icon("plus", lib = "glyphicon"))#,
+    #menuItem("Ebbert Lab Website", href = "https://ebbertlab.com/", icon = icon("new-window", lib = "glyphicon"))
   )
 )
 
@@ -54,8 +54,9 @@ body <- dashboardBody(
     tabItem(
       tabName = "TEx",
       fluidRow(
-        h1("Transcript Expression", align='center'),
+        h1("RNA isoform/transcript expression in human dorsolateral frontal cortex", align='center'),
         p("Compare the expression between different transcripts from the same gene.", align='center'),
+        p(strong("Please cite: <citation>"), align='center'),
         column(
           width = 12,
           box(
