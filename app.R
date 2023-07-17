@@ -378,7 +378,7 @@ server <- function(input, output, session) {
   new_genes$seqnames <- fct_rev(factor(new_genes$seqnames, levels = seqnames_levels))
   new_transcripts <- read_tsv("data_files/new_transcripts.tsv", lazy = TRUE)
   new_transcripts$seqnames <- fct_rev(factor(new_transcripts$seqnames, levels = seqnames_levels))
-  #sample_status <- read_tsv("data_files/sample_status.tsv", lazy = TRUE)
+  sample_status <- read_tsv("data_files/sample_status.tsv", lazy = TRUE)
   just_genes_overlap <- read_tsv("data_files/antisense.tsv", lazy = TRUE)
 
   current_ids <- reactiveValues(gene_id = "ENSG00000166295", # ANAPC16
