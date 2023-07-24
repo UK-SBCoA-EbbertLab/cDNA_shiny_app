@@ -66,7 +66,8 @@ body <- dashboardBody(
             div(
               align='right',
               actionButton('linkButton', "Checkout new gene bodies we discovered"),
-              downloadButton('downloadFig', 'Download', width=NULL)
+              downloadButton('downloadRaw', 'Download Raw Counts Matrix', width=NULL, href="https://zenodo.org/record/8174140/files/counts_transcript.txt?download=1"),
+              downloadButton('downloadFig', 'Download Figure', width=NULL)
             )
           )
           
@@ -135,7 +136,7 @@ body <- dashboardBody(
             width = NULL,
             status = "primary",
             plotOutput("densityPlot"),
-            div(align='right', downloadButton('downloadDensityFig', 'Download'))
+            div(align='right', downloadButton('downloadDensityFig', 'Download Figure'))
           )
         ),
       ),
