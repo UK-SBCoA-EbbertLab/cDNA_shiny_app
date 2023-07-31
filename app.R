@@ -808,7 +808,8 @@ server <- function(input, output, session) {
         ) + 
       ggtitle(input$expressionRadio) +
 #      geom_jitter(height=0) +
-      geom_jitter(height=0, aes(color = sample_status, shape = sample_sex)) + 
+      geom_point(position = position_jitter(seed = 42,height=0), aes(color = sample_status, shape = sample_sex)) +
+      #geom_jitter(height=0, aes(color = sample_status, shape = sample_sex)) + 
       coord_flip() + 
       theme(
         axis.title.x = element_blank(),
@@ -828,7 +829,8 @@ server <- function(input, output, session) {
       ) + 
       ggtitle("Relative abundance (percent expression within gene)") +
 #      geom_jitter(height = 0) +
-      geom_jitter(height = 0, aes(color = sample_status, shape = sample_sex)) + 
+      geom_point(position = position_jitter(seed = 42,height=0), aes(color = sample_status, shape = sample_sex)) +
+      #geom_jitter(height = 0, aes(color = sample_status, shape = sample_sex)) + 
       coord_flip() +
       theme(
         axis.title.x = element_blank(),
@@ -911,7 +913,8 @@ server <- function(input, output, session) {
         width = 0.5
       ) + 
       ggtitle(paste("Total gene expression:", comb_plot()$gene_name)) +
-      geom_jitter(height=0, aes(color = sample_status, shape = sample_sex)) + 
+      geom_point(position = position_jitter(seed = 42,height=0), aes(color = sample_status, shape = sample_sex)) +
+      #geom_jitter(height=0, aes(color = sample_status, shape = sample_sex)) + 
       coord_flip() +
       scale_color_manual(values = colorPointLevels) +
       scale_shape_manual(values = shapePointLevels) +
