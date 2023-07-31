@@ -54,7 +54,7 @@ new_transcripts <- transcript_data %>%
 # sample status
 sample_status <- read_tsv("../cDNA_files_r_shiny/cDNA_sample_info.tsv") %>%
   mutate(sample_status = ifelse(group == 2, "AD", "control")) %>%
-  mutate(sample_sex = ifelse(group == 2, "female", "male")) %>%
+  mutate(sample_sex = ifelse(sex == 2, "female", "male")) %>%
   select(sample_name, sample_status, sample_sex)
 
 # expression data, formatted for plot
@@ -129,7 +129,7 @@ write_tsv(just_genes_overlap, "data_files/antisense.tsv")
 write_tsv(gene_lookup, "data_files/gene_lookup.tsv")
 
 # Density plot data - CPM
-density_data <- read_tsv("cDNA_files_r_shiny/expression_matrix_r_shiny_GENE.tsv") %>%
+density_data <- read_tsv("../cDNA_files_r_shiny/expression_matrix_r_shiny_GENE.tsv") %>%
   rename(CPM = median_cpm) %>%
   rename(counts = median_counts)%>%
   filter(CPM > 0)%>%
@@ -141,7 +141,7 @@ plt <- ggplot(density_data, aes(x=log_comb_exp)) +
 save(plt, density_data, file = 'data_files/density_base_CPM.Rdata')
 
 # Density plot data - counts
-density_data <- read_tsv("cDNA_files_r_shiny/expression_matrix_r_shiny_GENE.tsv") %>%
+density_data <- read_tsv("../cDNA_files_r_shiny/expression_matrix_r_shiny_GENE.tsv") %>%
   rename(CPM = median_cpm) %>%
   rename(counts = median_counts)%>%
   filter(counts > 0)%>%

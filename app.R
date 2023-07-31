@@ -755,13 +755,15 @@ server <- function(input, output, session) {
     
     colorLevels <- setNames(hue_pal()(length(displayCategories)), levels(as.factor(displayCategories)))
     colorPointLevels <- setNames(c("#676767", "#000000"), levels(as.factor(sample_status$sample_status)))
+    shapePointLevels <- setNames(c(17, 16), levels(as.factor(sample_status$sample_sex)))
     
     #plot transcripts
     
     transcriptPlt <- ggplot(gene_rescaled_exons, aes(
       xstart = start,
       xend = end,
-      y = transcript_id
+      y = transcript_id,
+      
     )) +
       geom_range(
         aes(fill = !! sym(input$colorRadio)),
@@ -787,7 +789,8 @@ server <- function(input, output, session) {
       ) + 
       scale_fill_manual(values = colorLevels) +
       guides(fill=guide_legend(title=paste0(fill_legend_name, ':')))  +
-      scale_color_manual(values = colorPointLevels)
+      scale_color_manual(values = colorPointLevels) +
+      scale_shape_manual(values = shapePointLevels)
 
     expressionPlt <- ggplot(gene_expression, aes(transcript_id, !! sym(input$expressionRadio)))
     if(input$expressionRadio =="CPM") {
@@ -802,7 +805,7 @@ server <- function(input, output, session) {
         ) + 
       ggtitle(input$expressionRadio) +
 #      geom_jitter(height=0) +
-      geom_jitter(height=0, aes(color = sample_status)) + 
+      geom_jitter(height=0, aes(color = sample_status, shape = sample_sex)) + 
       coord_flip() + 
       theme(
         axis.title.x = element_blank(),
@@ -810,7 +813,8 @@ server <- function(input, output, session) {
         axis.text.y=element_blank()
       ) +
       scale_fill_manual(values = colorLevels)  +
-      scale_color_manual(values = colorPointLevels)
+      scale_color_manual(values = colorPointLevels)+
+      scale_shape_manual(values = shapePointLevels)
     
     relativeAbundancePlot <- ggplot(gene_expression, aes(transcript_id, relative_abundance)) +
       geom_boxplot(
@@ -821,7 +825,7 @@ server <- function(input, output, session) {
       ) + 
       ggtitle("Relative abundance (percent expression within gene)") +
 #      geom_jitter(height = 0) +
-      geom_jitter(height = 0, aes(color = sample_status)) + 
+      geom_jitter(height = 0, aes(color = sample_status, shape = sample_sex)) + 
       coord_flip() +
       theme(
         axis.title.x = element_blank(),
@@ -829,7 +833,8 @@ server <- function(input, output, session) {
         axis.text.y=element_blank()
       ) +
       scale_fill_manual(values = colorLevels)  +
-      scale_color_manual(values = colorPointLevels)
+      scale_color_manual(values = colorPointLevels) +
+      scale_shape_manual(values = shapePointLevels)
     
     if(input$expressionRadio =="CPM") {
       exp_type <- "CPM"
@@ -851,7 +856,7 @@ server <- function(input, output, session) {
       list(
         plot = annotate_figure(
           annotate_figure(
-            ggarrange(transcriptPlt, expressionPlt, relativeAbundancePlot, ncol=3, common.legend = TRUE, legend="bottom"),
+            ggarrange(transcriptPlt, expressionPlt, relativeAbundancePlot, ncol=3, common.legend = TRUE, legend="bottom", legend.grob = get_legend(expressionPlt, 'bottom')),
               top = text_grob(region_text),
               bottom = text_grob(dashed_line_legend, size = 10)
           ),
