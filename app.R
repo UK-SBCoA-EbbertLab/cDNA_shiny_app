@@ -57,6 +57,7 @@ body <- dashboardBody(
         h1("RNA isoform/transcript expression in human dorsolateral frontal cortex", align='center'),
         p("Compare the expression between different transcripts from the same gene.", align='center'),
         p(strong("Please cite: <citation>"), align='center'),
+        p("Note: If any part of the figure is cut off, try downloading the image. That should solve the problem.", align='center'),
         column(
           width = 12,
           box(
@@ -892,9 +893,12 @@ server <- function(input, output, session) {
     total_gene_expression <- plot_data()$expr
     total_gene_expression <- total_gene_expression %>%
       filter(gene_id == comb_plot()$gene_id) %>%
-      select(gene_id, sample_name, total_gene_CPM, total_gene_counts) %>%
+      select(gene_id, sample_name, total_gene_CPM, total_gene_counts, sample_status, sample_sex) %>%
       rename(CPM=total_gene_CPM, counts = total_gene_counts) %>%
       mutate(selected_exp = !! sym(input$expressionRadio))
+    
+    colorPointLevels <- setNames(c("#676767", "#000000"), levels(as.factor(sample_status$sample_status)))
+    shapePointLevels <- setNames(c(17, 16), levels(as.factor(sample_status$sample_sex)))
 
     selected_gene_name <- plot_data()$gene_name
     total_gene_CPM <- ggplot(distinct(total_gene_expression), aes(gene_id, selected_exp)) +
@@ -907,8 +911,10 @@ server <- function(input, output, session) {
         width = 0.5
       ) + 
       ggtitle(paste("Total gene expression:", comb_plot()$gene_name)) +
-      geom_jitter(height=0) + 
+      geom_jitter(height=0, aes(color = sample_status, shape = sample_sex)) + 
       coord_flip() +
+      scale_color_manual(values = colorPointLevels) +
+      scale_shape_manual(values = shapePointLevels) +
       theme(
         #plot.title = element_text(hjust = 0.5, size = 14, face = 'bold'),
         axis.text.y=element_text(angle=90, vjust = 1, hjust=0.5)
