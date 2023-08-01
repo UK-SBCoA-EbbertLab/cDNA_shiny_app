@@ -757,8 +757,8 @@ server <- function(input, output, session) {
       pull(!! sym(input$colorRadio))
     
     colorLevels <- setNames(hue_pal()(length(displayCategories)), levels(as.factor(displayCategories)))
-    colorPointLevels <- setNames(c("#676767", "#000000"), levels(as.factor(sample_status$sample_status)))
-    shapePointLevels <- setNames(c(17, 16), levels(as.factor(sample_status$sample_sex)))
+    colorPointLevels <- setNames(c("#808080", "#000000"), levels(as.factor(sample_status$sample_status)))
+    shapePointLevels <- setNames(c(17, 15), levels(as.factor(sample_status$sample_sex)))
     
     #plot transcripts
     
@@ -808,7 +808,7 @@ server <- function(input, output, session) {
         ) + 
       ggtitle(input$expressionRadio) +
 #      geom_jitter(height=0) +
-      geom_point(position = position_jitter(seed = 42,height=0), aes(color = sample_status, shape = sample_sex)) +
+      geom_point(position = position_jitter(seed = 42,height=0), aes(color = sample_status, shape = sample_sex), size=2.5) +
       #geom_jitter(height=0, aes(color = sample_status, shape = sample_sex)) + 
       coord_flip() + 
       theme(
@@ -829,7 +829,7 @@ server <- function(input, output, session) {
       ) + 
       ggtitle("Relative abundance (percent expression within gene)") +
 #      geom_jitter(height = 0) +
-      geom_point(position = position_jitter(seed = 42,height=0), aes(color = sample_status, shape = sample_sex)) +
+      geom_point(position = position_jitter(seed = 42,height=0), aes(color = sample_status, shape = sample_sex), size=2.5) +
       #geom_jitter(height = 0, aes(color = sample_status, shape = sample_sex)) + 
       coord_flip() +
       theme(
@@ -899,8 +899,8 @@ server <- function(input, output, session) {
       rename(CPM=total_gene_CPM, counts = total_gene_counts) %>%
       mutate(selected_exp = !! sym(input$expressionRadio))
     
-    colorPointLevels <- setNames(c("#676767", "#000000"), levels(as.factor(sample_status$sample_status)))
-    shapePointLevels <- setNames(c(17, 16), levels(as.factor(sample_status$sample_sex)))
+    colorPointLevels <- setNames(c("#808080", "#000000"), levels(as.factor(sample_status$sample_status)))
+    shapePointLevels <- setNames(c(17, 15), levels(as.factor(sample_status$sample_sex)))
 
     selected_gene_name <- plot_data()$gene_name
     total_gene_CPM <- ggplot(distinct(total_gene_expression), aes(gene_id, selected_exp)) +
@@ -913,7 +913,7 @@ server <- function(input, output, session) {
         width = 0.5
       ) + 
       ggtitle(paste("Total gene expression:", comb_plot()$gene_name)) +
-      geom_point(position = position_jitter(seed = 42,height=0), aes(color = sample_status, shape = sample_sex)) +
+      geom_point(position = position_jitter(seed = 42,height=0), aes(color = sample_status, shape = sample_sex), size=2.5) +
       #geom_jitter(height=0, aes(color = sample_status, shape = sample_sex)) + 
       coord_flip() +
       scale_color_manual(values = colorPointLevels) +
