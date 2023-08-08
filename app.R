@@ -56,8 +56,7 @@ body <- dashboardBody(
       fluidRow(
         h1("RNA isoform/transcript expression in human dorsolateral frontal cortex", align='center'),
         p("Compare the expression between different transcripts from the same gene.", align='center'),
-        p(strong("Please cite: <citation>"), align='center'),
-        p("Note: If any part of the figure is cut off, try downloading the image. That should solve the problem.", align='center'),
+        p("Please cite our paper:",br(), strong("Aguzzoli Heberle, B. and Brandon, J. et al. Using deep long-read RNAseq in Alzheimer’s disease brain to assess clinical relevance of RNA isoform diversity. BioRxiv (2023) doi:10.1101/2023.08.06.552162."), align='center'),
         column(
           width = 12,
           box(
@@ -73,6 +72,9 @@ body <- dashboardBody(
           )
           
         ),
+      ),
+      fluidRow(
+        p("Note: If any part of the figure is cut off, try downloading the image. That should solve the problem.", align='center')
       ),
       fluidRow(
         # search bar for genes
@@ -206,6 +208,7 @@ body <- dashboardBody(
       fluidRow(
         h1("New Gene Bodies", align='center'),
         p("New gene bodies from running Bambu discovery mode.", align='center'),
+        p("Please cite our paper:",br(), strong("Aguzzoli Heberle, B. and Brandon, J. et al. Using deep long-read RNAseq in Alzheimer’s disease brain to assess clinical relevance of RNA isoform diversity. BioRxiv (2023) doi:10.1101/2023.08.06.552162."), align='center'),
         box(
           width = NULL,
           status = "info",
@@ -276,6 +279,7 @@ body <- dashboardBody(
             fluidRow(
               h1("New Transcripts from Known Genes", align='center'),
               p("New transcripts from running Bambu discovery mode.", align='center'),
+              p("Please cite our paper:",br(), strong("Aguzzoli Heberle, B. and Brandon, J. et al. Using deep long-read RNAseq in Alzheimer’s disease brain to assess clinical relevance of RNA isoform diversity. BioRxiv (2023) doi:10.1101/2023.08.06.552162."), align='center'),
               box(
                 width = NULL,
                 status = "info",
