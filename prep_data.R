@@ -52,6 +52,7 @@ new_transcripts <- transcript_data %>%
   arrange(seqnames)
 
 # sample status
+# file created from the excel file about the samples
 sample_status <- read_tsv("../cDNA_files_r_shiny/cDNA_sample_info.tsv") %>%
   mutate(sample_status = ifelse(group == 2, "AD", "control")) %>%
   mutate(sample_sex = ifelse(sex == 2, "female", "male")) %>%

@@ -41,9 +41,9 @@ sidebar <- dashboardSidebar(
 )
 
 # gene search space
-lookup <- as.data.frame(read_tsv('data_files/gene_lookup.tsv')) 
+lookup <- as.data.frame(read_tsv('data_files/gene_lookup.tsv', col_types = 'ccc')) 
 
-display_categories <- read_tsv('data_files/display_color.tsv')
+display_categories <- read_tsv('data_files/display_color.tsv', col_types = 'ccc')
 
 template <- HTML("<strong><em>{{gene_name}}</em></strong> <p> <font size=\"2\"><em>{{gene_id}}</em></font> ")
 
@@ -381,12 +381,12 @@ server <- function(input, output, session) {
                       'KI270728.1', 'KI270731.1', 'KI270733.1', 'KI270734.1',
                       'KI270742.1', 'KI270743.1', 'KI270744.1', 'KI270750.1')
   
-  new_genes <- read_tsv("data_files/new_genes.tsv", lazy = TRUE)
+  new_genes <- read_tsv("data_files/new_genes.tsv", lazy = TRUE, col_types = 'cciicccccicc')
   new_genes$seqnames <- fct_rev(factor(new_genes$seqnames, levels = seqnames_levels))
-  new_transcripts <- read_tsv("data_files/new_transcripts.tsv", lazy = TRUE)
+  new_transcripts <- read_tsv("data_files/new_transcripts.tsv", lazy = TRUE, col_types = 'cciicccccicc')
   new_transcripts$seqnames <- fct_rev(factor(new_transcripts$seqnames, levels = seqnames_levels))
-  sample_status <- read_tsv("data_files/sample_status.tsv", lazy = TRUE)
-  just_genes_overlap <- read_tsv("data_files/antisense.tsv", lazy = TRUE)
+  sample_status <- read_tsv("data_files/sample_status.tsv", lazy = TRUE, col_types = 'ccc')
+  just_genes_overlap <- read_tsv("data_files/antisense.tsv", lazy = TRUE, col_types = 'ccc')
 
   current_ids <- reactiveValues(gene_id = "ENSG00000166295", # ANAPC16
                                  anti_sense_id = list(), 
@@ -403,9 +403,9 @@ server <- function(input, output, session) {
     antisense_id <- current_ids$anti_sense_id
     id_key <- filter(lookup, gene_id == id)$key_file
     
-    gene_transcripts <- read_tsv(paste0("data_files/txd_", id_key,".tsv")) %>% #, col_names = c("seqnames", "type", "start", "end", "strand", "gene_id", "gene_name", "transcript_id", "transcript_biotype", "exon_number", "annotation_status", "discovery_category"))
+    gene_transcripts <- read_tsv(paste0("data_files/txd_", id_key,".tsv"), col_types = 'cciicccccicc') %>% #, col_names = c("seqnames", "type", "start", "end", "strand", "gene_id", "gene_name", "transcript_id", "transcript_biotype", "exon_number", "annotation_status", "discovery_category"))
       filter(gene_id == id)
-    gene_expression <- read_tsv(paste0("data_files/exd_", id_key,".tsv")) %>% #, col_names = c("transcript_id", "gene_id", "seqnames", "annotation_status", "discovery_category", "transcript_biotype", "sample_name", "counts", "CPM", "total_gene_CPM", "relative_abundance", "total_gene_counts", "sample_status", "sample_sex"))
+    gene_expression <- read_tsv(paste0("data_files/exd_", id_key,".tsv"), col_types = 'cccccccdddddcc') %>% #, col_names = c("transcript_id", "gene_id", "seqnames", "annotation_status", "discovery_category", "transcript_biotype", "sample_name", "counts", "CPM", "total_gene_CPM", "relative_abundance", "total_gene_counts", "sample_status", "sample_sex"))
       filter(gene_id == id)
     
     # #grab the gene_name to print out later
@@ -421,10 +421,13 @@ server <- function(input, output, session) {
       
       for (gid in antisense_id){
         anti_key <- filter(lookup, gene_id == gid)$key_file
-        gene_antisense_transcripts <- bind_rows(gene_antisense_transcripts, read_tsv(paste0("data_files/txd_", anti_key,".tsv"))) %>% #, col_names = c("seqnames", "type", "start", "end", "strand", "gene_id", "gene_name", "transcript_id", "transcript_biotype", "exon_number", "annotation_status", "discovery_category")))
+        print('Just got the anti_key')
+        gene_antisense_transcripts <- bind_rows(gene_antisense_transcripts, read_tsv(paste0("data_files/txd_", anti_key,".tsv"), col_types = 'cciicccccicc')) %>% #, col_names = c("seqnames", "type", "start", "end", "strand", "gene_id", "gene_name", "transcript_id", "transcript_biotype", "exon_number", "annotation_status", "discovery_category")))
           filter(gene_id == gid)
-        gene_antisense_expression <- bind_rows(gene_antisense_expression, read_tsv(paste0("data_files/exd_", anti_key,".tsv"))) %>% #, col_names = c("transcript_id", "gene_id", "seqnames", "annotation_status", "discovery_category", "transcript_biotype", "sample_name", "counts", "CPM", "total_gene_CPM", "relative_abundance", "total_gene_counts", "sample_status", "sample_sex")))
+        print('gene_antisense_transcripts is good')
+        gene_antisense_expression <- bind_rows(gene_antisense_expression, read_tsv(paste0("data_files/exd_", anti_key,".tsv"), col_types = 'cccccccdddddcc')) %>% #, col_names = c("transcript_id", "gene_id", "seqnames", "annotation_status", "discovery_category", "transcript_biotype", "sample_name", "counts", "CPM", "total_gene_CPM", "relative_abundance", "total_gene_counts", "sample_status", "sample_sex")))
           filter(gene_id == gid)
+        print('gene_antisense_expression is good')
       }
       
       antisense_strand <- gene_antisense_transcripts %>% select(transcript_id, strand) %>% distinct()
@@ -432,9 +435,11 @@ server <- function(input, output, session) {
       
       gene_antisense_transcripts <- gene_antisense_transcripts %>%
         mutate(strand = unique(gene_transcripts$strand))
-      
+      print("doing just fine!")
       gene_transcripts <- bind_rows(gene_transcripts, gene_antisense_transcripts)
+      print('tx good')
       gene_expression <- bind_rows(gene_expression, gene_antisense_expression)
+      print('ex good')
     }
     
     return(
