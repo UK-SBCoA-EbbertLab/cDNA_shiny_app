@@ -56,7 +56,7 @@ body <- dashboardBody(
       fluidRow(
         h1("RNA isoform/transcript expression in human dorsolateral frontal cortex", align='center'),
         p("Compare the expression between different transcripts from the same gene.", align='center'),
-        p("Please cite our paper:",br(), strong("Aguzzoli Heberle, B. and Brandon, J. et al. Using deep long-read RNAseq in Alzheimer’s disease brain to assess clinical relevance of RNA isoform diversity. BioRxiv (2023) doi:10.1101/2023.08.06.552162."), align='center'),
+        p("Please cite our paper:",br(), strong("Aguzzoli Heberle, B. and Brandon, J. et al. Using deep long-read RNAseq in Alzheimer’s disease brain to "), br(), strong("assess clinical relevance of RNA isoform diversity. BioRxiv (2023) doi:10.1101/2023.08.06.552162."), align='center'),
         column(
           width = 12,
           box(
