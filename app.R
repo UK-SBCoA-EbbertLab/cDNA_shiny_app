@@ -35,8 +35,8 @@ sidebar <- dashboardSidebar(
     id = "tabs",
     menuItem("Brain RNA IsoSeq", tabName = "TEx", icon = icon("stats", lib = "glyphicon")),
     menuItem("New Gene Bodies", tabName = "ngb", icon = icon("plus", lib = "glyphicon")),
-    menuItem("New Transcripts", tabName = "ntx", icon = icon("plus", lib = "glyphicon"))#,
-    #menuItem("Ebbert Lab Website", href = "https://ebbertlab.com/", icon = icon("new-window", lib = "glyphicon"))
+    menuItem("New Transcripts", tabName = "ntx", icon = icon("plus", lib = "glyphicon")),
+    menuItem("Read our pre-print", href = "https://www.biorxiv.org/content/10.1101/2023.08.06.552162v2", icon = icon("new-window", lib = "glyphicon"))
   )
 )
 
