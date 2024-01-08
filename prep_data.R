@@ -134,7 +134,8 @@ density_data <- read_tsv("../cDNA_files_r_shiny/expression_matrix_r_shiny_GENE.t
   rename(CPM = median_cpm) %>%
   rename(counts = median_counts)%>%
   filter(CPM > 0)%>%
-  mutate(log_comb_exp = log10(CPM))
+  mutate(log_comb_exp = log10(CPM)) %>% 
+  mutate(percentile = percent_rank(log_comb_exp)*100)
 
 plt <- ggplot(density_data, aes(x=log_comb_exp)) +
   geom_density()
@@ -146,7 +147,8 @@ density_data <- read_tsv("../cDNA_files_r_shiny/expression_matrix_r_shiny_GENE.t
   rename(CPM = median_cpm) %>%
   rename(counts = median_counts)%>%
   filter(counts > 0)%>%
-  mutate(log_comb_exp = log10(counts))
+  mutate(log_comb_exp = log10(counts)) %>% 
+  mutate(percentile = percent_rank(log_comb_exp)*100)
 
 plt <- ggplot(density_data, aes(x=log_comb_exp)) +
   geom_density()

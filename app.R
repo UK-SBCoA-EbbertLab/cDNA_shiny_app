@@ -149,17 +149,17 @@ body <- dashboardBody(
           width = 6,
           solidHeader = TRUE,
           helpText(h5("Download dimensions for Transcripts and Expression plot",align='center')),
-          sliderInput("widthSlider", "Width:", 5, 49, 12),
+          sliderInput("widthSlider", "Width:", 7, 125, 30),
           # slider to determine height of download plot
-          sliderInput("heightSlider", "Height:", 3, 49, 6)
+          sliderInput("heightSlider", "Height:", 3, 125, 15)
         ),
         box(
           width = 6,
           solidHeader = TRUE,
           helpText(h5("Download dimensions for Density plot",align='center')),
-          sliderInput("widthDensitySlider", "Width:", 3, 15, 7),
+          sliderInput("widthDensitySlider", "Width:", 5, 38, 18),
           # slider to determine height of download plot
-          sliderInput("heightDensitySlider", "Height:", 5, 15, 6)
+          sliderInput("heightDensitySlider", "Height:", 7, 38, 15)
         ),
       ),
       fluidRow(
@@ -769,86 +769,19 @@ server <- function(input, output, session) {
     colorPointLevels <- setNames(c("#808080", "#000000"), levels(as.factor(sample_status$sample_status)))
     shapePointLevels <- setNames(c(17, 15), levels(as.factor(sample_status$sample_sex)))
     
-    #plot transcripts
-    
-    transcriptPlt <- ggplot(gene_rescaled_exons, aes(
-      xstart = start,
-      xend = end,
-      y = transcript_id,
-      
-    )) +
-      geom_range(
-        aes(fill = !! sym(input$colorRadio)),
-        height = 0.25
-      ) +
-      geom_range(
-        aes(fill = !! sym(input$colorRadio)),
-        data = gene_rescaled_cds
-      )
-    
-    plot_bp_range <- ceiling(ggplot_build(transcriptPlt)$layout$panel_params[[1]]$x.range[2])
-
-    transcriptPlt <- transcriptPlt + 
-      geom_intron(
-        data = gene_rescaled_introns,
-        arrow.min.intron.length = plot_bp_range / 12,
-        aes(strand = strand)
-      ) + 
-      ggtitle("Transcript") +
-      theme (
-        axis.title.y = element_blank(), 
-        legend.title = element_text(face = "bold")
-      ) + 
-      scale_fill_manual(values = colorLevels) +
-      guides(fill=guide_legend(title=paste0(fill_legend_name, ':')))  +
-      scale_color_manual(values = colorPointLevels) +
-      scale_shape_manual(values = shapePointLevels)
-
-    expressionPlt <- ggplot(gene_expression, aes(transcript_id, !! sym(input$expressionRadio)))
-    if(input$expressionRadio =="CPM") {
-      expressionPlt <- expressionPlt + geom_hline(yintercept=1, linetype="dashed", color = "darkcyan")
-    }
-    expressionPlt <- expressionPlt +
-      geom_boxplot(
-        aes(
-          fill = !! sym(input$colorRadio)
-          ), 
-        outlier.shape = NA
-        ) + 
-      ggtitle(input$expressionRadio) +
-#      geom_jitter(height=0) +
-      geom_point(position = position_jitter(seed = 42,height=0), aes(color = sample_status, shape = sample_sex), size=2.5) +
-      #geom_jitter(height=0, aes(color = sample_status, shape = sample_sex)) + 
-      coord_flip() + 
-      theme(
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        axis.text.y=element_blank()
-      ) +
-      scale_fill_manual(values = colorLevels)  +
-      scale_color_manual(values = colorPointLevels)+
-      scale_shape_manual(values = shapePointLevels)
-    
-    relativeAbundancePlot <- ggplot(gene_expression, aes(transcript_id, relative_abundance)) +
-      geom_boxplot(
-        aes(
-          fill = !! sym(input$colorRadio)
-        ),
-        outlier.shape = NA
-      ) + 
-      ggtitle("Relative abundance (percent expression within gene)") +
-#      geom_jitter(height = 0) +
-      geom_point(position = position_jitter(seed = 42,height=0), aes(color = sample_status, shape = sample_sex), size=2.5) +
-      #geom_jitter(height = 0, aes(color = sample_status, shape = sample_sex)) + 
-      coord_flip() +
-      theme(
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        axis.text.y=element_blank()
-      ) +
-      scale_fill_manual(values = colorLevels)  +
-      scale_color_manual(values = colorPointLevels) +
-      scale_shape_manual(values = shapePointLevels)
+    subPlotItems <- list(
+      gene_rescaled_exons = gene_rescaled_exons,
+      gene_rescaled_cds = gene_rescaled_cds,
+      gene_rescaled_introns = gene_rescaled_introns,
+      transcript_id = transcripts_to_display,
+      gene_expression = gene_expression,
+      column_select = input$colorRadio,
+      column_select_ex = input$expressionRadio,
+      colorLevels = colorLevels,
+      colorPointLevels = colorPointLevels,
+      shapePointLevels = shapePointLevels,
+      fill_legend_name = fill_legend_name
+    )
     
     if(input$expressionRadio =="CPM") {
       exp_type <- "CPM"
@@ -868,14 +801,10 @@ server <- function(input, output, session) {
     # and for downloading it
     return(
       list(
-        plot = annotate_figure(
-          annotate_figure(
-            ggarrange(transcriptPlt, expressionPlt, relativeAbundancePlot, ncol=3, common.legend = TRUE, legend="bottom", legend.grob = get_legend(expressionPlt, 'bottom')),
-              top = text_grob(region_text),
-              bottom = text_grob(dashed_line_legend, size = 10)
-          ),
-          top = text_grob(paste0("\n", selected_gene_name, " (", id,"): ","Transcripts and Expression (", exp_type,")"), face = "bold", size = 20)
-        ),
+        subPlotItems = subPlotItems,
+        headerTxt = paste0("\n", selected_gene_name, " (", id,"): ","Transcripts and Expression (", exp_type,")"),
+        subHeadTxt = region_text,
+        postText = dashed_line_legend,
         gene_name = selected_gene_name,
         gene_id = id,
         plotHeight = plotHeight,
@@ -883,6 +812,160 @@ server <- function(input, output, session) {
       )
     )
   })
+  
+  plot_subplots = function(items_for_plot, isDownload=FALSE, forDownload=NULL) {
+
+    #plot transcripts
+    transcriptPlt <- ggplot(items_for_plot$gene_rescaled_exons, aes(
+      xstart = start,
+      xend = end,
+      y = transcript_id,
+    )) +
+      geom_range(
+        aes(fill = !! sym(items_for_plot$column_select)),
+        height = 0.25
+      ) +
+      geom_range(
+        aes(fill = !! sym(items_for_plot$column_select)),
+        data = items_for_plot$gene_rescaled_cds
+      )
+    
+    plot_bp_range <- ceiling(ggplot_build(transcriptPlt)$layout$panel_params[[1]]$x.range[2])
+    print(plot_bp_range / 12 + (plot_bp_range / 6)/forDownload$width)
+    
+    if (isDownload) {
+      transcriptPlt <- transcriptPlt + 
+        geom_intron(
+          data = items_for_plot$gene_rescaled_intro,
+          arrow.min.intron.length = plot_bp_range / 12 + (plot_bp_range)/forDownload$width,
+          aes(strand = strand),
+          arrow = grid::arrow(ends = "last", length = grid::unit(forDownload$arrow_size, "cm"))
+        ) +
+        theme(
+          axis.text.y = element_text(size=forDownload$small_tx_size), 
+          axis.text.x = element_text(size=forDownload$small_tx_size), 
+          plot.title = element_text(size = forDownload$large_tx_size))
+    } else {
+      transcriptPlt <- transcriptPlt + 
+        geom_intron(
+          data = items_for_plot$gene_rescaled_intro,
+          arrow.min.intron.length = plot_bp_range / 12,
+          aes(strand = strand)
+        )
+    }
+    
+    transcriptPlt <- transcriptPlt + 
+      ggtitle("Transcript") +
+      theme (
+        axis.title.y = element_blank(), 
+        legend.title = element_text(face = "bold")
+      ) + 
+      scale_fill_manual(values = items_for_plot$colorLevels) +
+      guides(fill=guide_legend(title=paste0(items_for_plot$fill_legend_name, ':')))  +
+      scale_color_manual(values = items_for_plot$colorPointLevels) +
+      scale_shape_manual(values = items_for_plot$shapePointLevels)
+    
+    
+    # expression plot
+    expressionPlt <- ggplot(items_for_plot$gene_expression, aes(transcript_id, !! sym(items_for_plot$column_select_ex)))
+    if(items_for_plot$column_select_ex =="CPM") {
+      expressionPlt <- expressionPlt + geom_hline(yintercept=1, linetype="dashed", color = "darkcyan")
+    }
+    if (isDownload) {
+      expressionPlt <- expressionPlt +
+        geom_boxplot(
+          aes(
+            fill = !! sym(items_for_plot$column_select)
+          ), 
+          outlier.shape = NA,
+          linewidth = forDownload$outline_size
+        ) + 
+          ggtitle(items_for_plot$column_select_ex) +
+          geom_point(
+            position = position_jitter(seed = 42,height=0), 
+            aes(
+              color = sample_status, 
+              shape = sample_sex), 
+            size=forDownload$point_size) + 
+          theme(
+            axis.text.x = element_text(size=forDownload$small_tx_size), 
+            plot.title = element_text(size = forDownload$large_tx_size))
+      
+    } else {
+      expressionPlt <- expressionPlt +
+        geom_boxplot(
+          aes(
+            fill = !! sym(items_for_plot$column_select)
+          ), 
+          outlier.shape = NA
+        ) + 
+        ggtitle(items_for_plot$column_select_ex) +
+        geom_point(position = position_jitter(seed = 42,height=0), aes(color = sample_status, shape = sample_sex), size=2.5)
+    }
+    
+    expressionPlt <- expressionPlt +
+      coord_flip() + 
+      theme(
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y=element_blank()
+      ) +
+      scale_fill_manual(values = items_for_plot$colorLevels)  +
+      scale_color_manual(values = items_for_plot$colorPointLevels)+
+      scale_shape_manual(values = items_for_plot$shapePointLevels)
+
+    
+    # relative abundance
+    relativeAbundancePlot <- ggplot(items_for_plot$gene_expression, aes(transcript_id, relative_abundance))
+    
+    if(isDownload){
+      relativeAbundancePlot <- relativeAbundancePlot +
+        geom_boxplot(
+          aes(
+            fill = !! sym(items_for_plot$column_select)
+          ),
+          outlier.shape = NA,
+          linewidth = forDownload$outline_size
+        ) +
+          ggtitle("Relative abundance (percent expression within gene)") +
+          geom_point(
+            position = position_jitter(seed = 42,height=0), 
+            aes(
+              color = sample_status, 
+              shape = sample_sex), 
+            size=forDownload$point_size) +
+          theme(
+            axis.text.x = element_text(size=forDownload$small_tx_size), 
+            plot.title = element_text(size = forDownload$large_tx_size))
+    } else {
+      relativeAbundancePlot <- relativeAbundancePlot +
+        geom_boxplot(
+          aes(
+            fill = !! sym(items_for_plot$column_select)
+          ),
+          outlier.shape = NA
+        ) +
+          ggtitle("Relative abundance (percent expression within gene)") +
+          geom_point(position = position_jitter(seed = 42,height=0), aes(color = sample_status, shape = sample_sex), size=2.5)
+    }
+    relativeAbundancePlot <- relativeAbundancePlot +
+      coord_flip() +
+      theme(
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y=element_blank()
+      ) +
+      scale_fill_manual(values = items_for_plot$colorLevels)  +
+      scale_color_manual(values = items_for_plot$colorPointLevels) +
+      scale_shape_manual(values = items_for_plot$shapePointLevels)
+    
+    return(list(
+      txPlt = transcriptPlt,
+      exPlt = expressionPlt,
+      relAbPlt = relativeAbundancePlot,
+      n_tx = length(items_for_plot$transcript_id)
+    ))
+  }
   
   exprDensityPlot <- reactive({
 
@@ -934,15 +1017,17 @@ server <- function(input, output, session) {
       
     y_ranges <- layer_scales(plt)$y$range$range
     x_ranges <- layer_scales(plt)$x$range$range
+    
+    label_txt <- paste0(comb_plot()$gene_name, ' (Percentile: ', round(density_data$percentile[density_data$gene_id == comb_plot()$gene_id], 1), ')')
 
     if (input$expressionRadio == "CPM"){
       if (! comb_plot()$gene_id %in% density_data$gene_id) {
         plt <- plt + geom_text(aes(x_ranges[2], y_ranges[2], label = paste(comb_plot()$gene_name, 'is not \nexpressed')), nudge_x = -2, nudge_y = -0.05, colour = "#F8766D")
       } else if (density_data$log_comb_exp[density_data$gene_id == comb_plot()$gene_id] > 4) {
         #need to flip which side the name is on
-        plt <- plt + geom_text(aes(density_data$log_comb_exp[density_data$gene_id == comb_plot()$gene_id], y_ranges[2], label = comb_plot()$gene_name), nudge_x = -1, colour = "#F8766D")
+        plt <- plt + geom_text(aes(density_data$log_comb_exp[density_data$gene_id == comb_plot()$gene_id], y_ranges[2], label = label_txt), nudge_x = -1, colour = "#F8766D")
       } else {
-        plt <- plt + geom_text(aes(density_data$log_comb_exp[density_data$gene_id == comb_plot()$gene_id], y_ranges[2], label = comb_plot()$gene_name), nudge_x = 1, colour = "#F8766D")
+        plt <- plt + geom_text(aes(density_data$log_comb_exp[density_data$gene_id == comb_plot()$gene_id], y_ranges[2], label = label_txt), nudge_x = 1, colour = "#F8766D")
       }
       plt <- plt + xlab("log10 (median CPM)")
 
@@ -950,9 +1035,9 @@ server <- function(input, output, session) {
       if (! comb_plot()$gene_id %in% density_data$gene_id) {
         plt <- plt + geom_text(aes(x_ranges[2], y_ranges[2], label = paste(comb_plot()$gene_name, 'is not \nexpressed')), nudge_x = -2, nudge_y = -0.05, colour = "#F8766D")
       } else if (density_data$log_comb_exp[density_data$gene_id == comb_plot()$gene_id] > 6){
-        plt <- plt + geom_text(aes(density_data$log_comb_exp[density_data$gene_id == comb_plot()$gene_id], y_ranges[2], label = comb_plot()$gene_name), nudge_x = -1, colour = "#F8766D")
+        plt <- plt + geom_text(aes(density_data$log_comb_exp[density_data$gene_id == comb_plot()$gene_id], y_ranges[2], label = label_txt), nudge_x = -1, colour = "#F8766D")
       } else {
-        plt <- plt + geom_text(aes(density_data$log_comb_exp[density_data$gene_id == comb_plot()$gene_id], y_ranges[2], label = comb_plot()$gene_name), nudge_x = 1, colour = "#F8766D")
+        plt <- plt + geom_text(aes(density_data$log_comb_exp[density_data$gene_id == comb_plot()$gene_id], y_ranges[2], label = label_txt), nudge_x = 1, colour = "#F8766D")
       }
       plt <- plt + xlab("log10 (combined median counts)")
     }
@@ -966,15 +1051,15 @@ server <- function(input, output, session) {
   
   # Set the recommended size for downloading the plot
   observe({
-    heightValue <- 2 + ceiling(comb_plot()$num_transcripts * 0.5)
-    widthValue <- 16 + ceiling(comb_plot()$num_transcripts * 0.1)
+    heightValue <- (2 + ceiling(comb_plot()$num_transcripts * 0.5)) * 2.54
+    widthValue <- (16 + ceiling(comb_plot()$num_transcripts * 0.1)) * 2.54
     
     if (heightValue > 49){
-      heightValue <- 49
+      heightValue <- 49 * 2.54
     }
     
     if (widthValue > 49){
-      widthValue <- 49
+      widthValue <- 49 * 2.54
     }
 
     updateSliderInput(session, inputId = "widthSlider", value = widthValue)
@@ -986,28 +1071,100 @@ server <- function(input, output, session) {
   })
 
   output$transcriptPlot <- renderPlot({
-    comb_plot()$plot
+    pltItems <- plot_subplots(comb_plot()$subPlotItems)
+    annotate_figure(
+      annotate_figure(
+        ggarrange(
+          pltItems$txPlt, 
+          pltItems$exPlt, 
+          pltItems$relAbPlt, 
+          ncol=3, 
+          common.legend = TRUE, 
+          legend="bottom", 
+          legend.grob = get_legend(pltItems$exPlt, 'bottom')),
+        top = text_grob(comb_plot()$subHeadTxt),
+        bottom = text_grob(comb_plot()$postText, size = 10)
+      ),
+      top = text_grob(comb_plot()$headerTxt, face = "bold", size = 20)
+    )
+    #comb_plot()$plot
   })
   
   output$plot.ui <- renderUI({
     plotOutput("transcriptPlot", height = comb_plot()$plotHeight)
   })
+  
+  calculate_plot_sizes <- function(width, height, n_tx){
+    outline_size = .15 + width*0 + height*0 + n_tx*0
+    point_size = .15 + width*0 + height*0 + n_tx*0
+    small_tx_size = 2 + width*(ifelse(width < 64, 1/3, 2/5)) - ceiling(n_tx/height)
+    print(small_tx_size)
+    print('printing small tx')
+    median_tx_size = 2 + width*0 + height*0 + n_tx*0
+    large_tx_size = 3 + width*(ifelse(width < 64, 1/3, 1/2)) + height*0 + n_tx*0
+    arrow_size = 0.09 + width*0 + height*0 + n_tx*0
+    
+    return(list(
+      width = width,
+      height = height,
+      outline_size = outline_size,
+      point_size = point_size,
+      small_tx_size = small_tx_size,
+      median_tx_size = median_tx_size,
+      large_tx_size = large_tx_size,
+      arrow_size = arrow_size
+    ))
+    
+  }
 
   output$downloadFig <- downloadHandler(
     filename = function() {
-      paste('Transcripts-and-expression-', comb_plot()$gene_name, "-", comb_plot()$gene_id  ,'.pdf', sep='')
+      paste('Transcripts-and-expression-', comb_plot()$gene_name, "-", comb_plot()$gene_id , '-', input$widthSlider, 'w-x-', input$heightSlider, 'h.pdf', sep='')
     },
     content = function(file) {
-      ggsave(file, comb_plot()$plot, width = input$widthSlider, height = input$heightSlider, dpi = 300)
+      
+      pltItems <- plot_subplots(comb_plot()$subPlotItems, TRUE, calculate_plot_sizes(input$widthSlider, input$heightSlider, comb_plot()$num_transcripts))
+      legend_key = .1 + input$widthSlider*0 + input$heightSlider/20 + comb_plot()$num_transcripts*0
+      legend_title = 2 + input$widthSlider*0 + input$heightSlider*0 + comb_plot()$num_transcripts*0
+      legend_text = 2 + input$widthSlider*0 + input$heightSlider*0 + comb_plot()$num_transcripts*0
+      
+      print('in downlaod')
+      title = 4 + input$widthSlider*(ifelse(input$widthSlider < 64, 1/2, 3/5)) + input$heightSlider*0 + comb_plot()$num_transcripts*0
+      subHead = 3 + input$widthSlider*0 + input$heightSlider*0 + comb_plot()$num_transcripts*0
+      postText = 2 + input$widthSlider*0 + input$heightSlider*0 + comb_plot()$num_transcripts*0
+      
+      plot <- annotate_figure(
+            annotate_figure(
+              ggarrange(
+                pltItems$txPlt, 
+                pltItems$exPlt, 
+                pltItems$relAbPlt, 
+                ncol=3,
+                common.legend = TRUE, 
+                legend="bottom",
+                legend.grob = get_legend(pltItems$exPlt + theme(
+                  legend.key.size = unit(legend_key, 'cm'), #change legend key size
+                  legend.key.height = unit(legend_key, 'cm'), #change legend key height
+                  legend.key.width = unit(legend_key, 'cm'), #change legend key width
+                  legend.title = element_text(size=legend_title), #change legend title font size
+                  legend.text = element_text(size=legend_text)
+                ), 'bottom')),
+              top = text_grob(comb_plot()$subHeadTxt, size = subHead),
+              bottom = text_grob(comb_plot()$postText, size = postText),
+              fig.lab.size = 3
+            ),
+          top = text_grob(comb_plot()$headerTxt, face = "bold", size = title)
+        )
+      ggsave(file, plot, width = input$widthSlider, height = input$heightSlider, unit='cm', dpi = 300)
     }
   )
   
   output$downloadDensityFig <- downloadHandler(
     filename = function() {
-      paste('Density-plot-highlight-', comb_plot()$gene_name, "-", comb_plot()$gene_id  ,'.pdf', sep='')
+      paste('Density-plot-highlight-', comb_plot()$gene_name, "-", comb_plot()$gene_id ,'.pdf', sep='')
     },
     content = function(file) {
-      ggsave(file, exprDensityPlot(), width = input$widthDensitySlider, height = input$heightDensitySlider, dpi = 300)
+      ggsave(file, exprDensityPlot(), width = input$widthDensitySlider, height = input$heightDensitySlider, unit='cm', dpi = 300)
 
     }
   )
