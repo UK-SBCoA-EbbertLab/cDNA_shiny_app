@@ -140,7 +140,10 @@ body <- dashboardBody(
             status = "primary",
             plotOutput("densityPlot"),
             div(align='right', downloadButton('downloadDensityFig', 'Download Figure'))
-          )
+          ),
+          fluidRow(
+            p("Pro Tip: Users can import this plot into Adobe Illustrator (or similar products) and adjust the position of the text. We can not always ensure the text will be appropriately aligned.", align='center')
+          ),
         ),
       ),
       fluidRow(
@@ -161,6 +164,9 @@ body <- dashboardBody(
           # slider to determine height of download plot
           sliderInput("heightDensitySlider", "Height:", 7, 38, 15)
         ),
+      ),
+      fluidRow(
+        p("Note: Resizing text/other elements to allow multiple width and height download options is tedious. While we did our best to allow for users to choose the size they want to download the plots in, there will always be some dimensions that just don't look right. In those cases, please choose other dimentions. For convienence, we preset dimensions that should work for each plot.", align='center')
       ),
       fluidRow(
         box(
@@ -927,7 +933,7 @@ server <- function(input, output, session) {
           outlier.shape = NA,
           linewidth = forDownload$outline_size
         ) +
-          ggtitle("Relative abundance (percent expression within gene)") +
+          ggtitle("Relative abundance (% expr. in gene)") +
           geom_point(
             position = position_jitter(seed = 42,height=0), 
             aes(
@@ -945,7 +951,7 @@ server <- function(input, output, session) {
           ),
           outlier.shape = NA
         ) +
-          ggtitle("Relative abundance (percent expression within gene)") +
+          ggtitle("Relative abundance (% expr. in gene)") +
           geom_point(position = position_jitter(seed = 42,height=0), aes(color = sample_status, shape = sample_sex), size=2.5)
     }
     relativeAbundancePlot <- relativeAbundancePlot +
@@ -1095,14 +1101,14 @@ server <- function(input, output, session) {
   })
   
   calculate_plot_sizes <- function(width, height, n_tx){
-    outline_size = .15 + width*0 + height*0 + n_tx*0
-    point_size = .15 + width*0 + height*0 + n_tx*0
-    small_tx_size = 2 + width*(ifelse(width < 64, 1/3, 2/5)) - ceiling(n_tx/height)
+    outline_size = .18 * min(width / 7, height / 3)
+    point_size = .25 * min(width / 7, height / 3)
+    small_tx_size = 2 * min(width / 7, height / 3) + 1
     print(small_tx_size)
     print('printing small tx')
-    median_tx_size = 2 + width*0 + height*0 + n_tx*0
-    large_tx_size = 3 + width*(ifelse(width < 64, 1/3, 1/2)) + height*0 + n_tx*0
-    arrow_size = 0.09 + width*0 + height*0 + n_tx*0
+    large_tx_size = 3 * min(width / 7, height / 3) + 1
+    arrow_size = 0.09 * min(width / 7, height / 3)
+    print(arrow_size)
     
     return(list(
       width = width,
@@ -1110,7 +1116,6 @@ server <- function(input, output, session) {
       outline_size = outline_size,
       point_size = point_size,
       small_tx_size = small_tx_size,
-      median_tx_size = median_tx_size,
       large_tx_size = large_tx_size,
       arrow_size = arrow_size
     ))
@@ -1124,14 +1129,14 @@ server <- function(input, output, session) {
     content = function(file) {
       
       pltItems <- plot_subplots(comb_plot()$subPlotItems, TRUE, calculate_plot_sizes(input$widthSlider, input$heightSlider, comb_plot()$num_transcripts))
-      legend_key = .1 + input$widthSlider*0 + input$heightSlider/20 + comb_plot()$num_transcripts*0
-      legend_title = 2 + input$widthSlider*0 + input$heightSlider*0 + comb_plot()$num_transcripts*0
-      legend_text = 2 + input$widthSlider*0 + input$heightSlider*0 + comb_plot()$num_transcripts*0
+      legend_key = .1 * min(input$widthSlider/7, input$heightSlider/3)
+      legend_title = 2 * min(input$widthSlider/7, input$heightSlider/3)
+      legend_text = 2 * min(input$widthSlider/7, input$heightSlider/3)
       
       print('in downlaod')
-      title = 4 + input$widthSlider*(ifelse(input$widthSlider < 64, 1/2, 3/5)) + input$heightSlider*0 + comb_plot()$num_transcripts*0
-      subHead = 3 + input$widthSlider*0 + input$heightSlider*0 + comb_plot()$num_transcripts*0
-      postText = 2 + input$widthSlider*0 + input$heightSlider*0 + comb_plot()$num_transcripts*0
+      title = 4 * min(input$widthSlider/7, input$heightSlider/3)
+      subHead = 3 * min(input$widthSlider/7, input$heightSlider/3)
+      postText = 1.5 * min(input$widthSlider/7, input$heightSlider/3)
       
       plot <- annotate_figure(
             annotate_figure(
