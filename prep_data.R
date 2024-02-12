@@ -155,18 +155,27 @@ plt <- ggplot(density_data, aes(x=log_comb_exp)) +
 
 save(plt, density_data, file = 'data_files/density_base_counts.Rdata')
 
-write_tsv(transcript_data %>%
+#write_tsv(
+anno_color <- transcript_data %>%
             select(annotation_status) %>%
             distinct(annotation_status) %>%
-            mutate(display_color = annotation_status), 'data_files/display_color_annotation_status.tsv')
+            mutate(id = row_number())
+#, 'data_files/display_color_annotation_status.tsv')
 
-write_tsv(transcript_data %>%
+#write_tsv(
+tx_color <- transcript_data %>%
             select(transcript_biotype) %>%
             distinct(transcript_biotype) %>%
-            mutate(display_color = transcript_biotype), 'data_files/display_color_transcript_biotype.tsv')
+            mutate(id = row_number())
 
-write_tsv(transcript_data %>%
+#            mutate(display_color = transcript_biotype), 'data_files/display_color_transcript_biotype.tsv')
+
+#write_tsv(
+discov_color <- transcript_data %>%
             select(discovery_category) %>%
             distinct(discovery_category) %>%
-            mutate(display_color = discovery_category), 'data_files/display_color_discovery_category.tsv')
+            mutate(id = row_number())
+
+write_tsv(full_join(discov_color, tx_color) %>%
+            full_join(anno_color), 'data_files/display_color.tsv')
 
