@@ -67,6 +67,7 @@ body <- dashboardBody(
               align='right',
               actionButton('linkButton', "Checkout new gene bodies we discovered"),
               downloadButton('downloadRaw', 'Download Raw Counts Matrix', width=NULL, href="https://zenodo.org/record/8174140/files/counts_transcript.txt?download=1"),
+              downloadButton('downloadFa', 'Download Isoform Sequences', width=NULL, href="https://zenodo.org/records/11488196/files/transcriptome.fa?download=1"),
               downloadButton('downloadFig', 'Download Figure', width=NULL)
             )
           )
